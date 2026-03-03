@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
+function normalizeTags(raw: string) {
+  return raw
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
 export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const { id } = useParams();
   const nav = useNavigate();
@@ -18,6 +25,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
     queryKey: ["recipe", householdId, id],
     queryFn: () => getRecipe(householdId!, id!),
     enabled: ready && mode === "edit" && !!id,
+    staleTime: 30_000,
   });
 
   const [name, setName] = React.useState("");
@@ -28,43 +36,55 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const [notes, setNotes] = React.useState<string>("");
   const [steps, setSteps] = React.useState<string[]>([""]);
 
+  // Prevent overwriting user edits if query refetches
+  const hydratedRef = React.useRef(false);
+
   React.useEffect(() => {
-    if (q.data && mode === "edit") {
-      setName(q.data.name);
-      setTags((q.data.tags ?? []).join(", "));
-      setPrep(q.data.prep_minutes?.toString() ?? "");
-      setCook(q.data.cook_minutes?.toString() ?? "");
-      setServings(q.data.default_servings?.toString() ?? "2");
-      setNotes(q.data.notes ?? "");
-      setSteps(q.data.steps?.length ? q.data.steps : [""]);
-    }
+    if (mode !== "edit") return;
+    if (!q.data) return;
+    if (hydratedRef.current) return;
+
+    hydratedRef.current = true;
+    setName(q.data.name ?? "");
+    setTags((q.data.tags ?? []).join(", "));
+    setPrep(q.data.prep_minutes?.toString() ?? "");
+    setCook(q.data.cook_minutes?.toString() ?? "");
+    setServings((q.data.default_servings ?? 2).toString());
+    setNotes(q.data.notes ?? "");
+    setSteps(q.data.steps?.length ? q.data.steps : [""]);
   }, [q.data, mode]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
       const input: RecipeInput = RecipeSchema.parse({
-        name,
+        name: name.trim(),
         steps: steps.map((s) => s.trim()).filter(Boolean),
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags: normalizeTags(tags),
         prep_minutes: prep.trim() ? Number(prep) : null,
         cook_minutes: cook.trim() ? Number(cook) : null,
         default_servings: Number(servings || 2),
-        notes: notes.trim() ? notes : null,
+        notes: notes.trim() ? notes.trim() : null,
       });
 
       if (mode === "create") {
         return createRecipe({
           household_id: householdId!,
           ...input,
+          tags: input.tags ?? [],
+          steps: input.steps ?? [],
         });
       }
-      return updateRecipe(householdId!, id!, input);
+
+      // update expects partial; we send full validated payload (safe)
+      return updateRecipe(householdId!, id!, {
+        ...input,
+        tags: input.tags ?? [],
+        steps: input.steps ?? [],
+      });
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["recipes", householdId] });
+      await qc.invalidateQueries({ queryKey: ["recipe", householdId, id] });
       nav("/recipes");
     },
   });
@@ -73,14 +93,23 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
     mutationFn: async () => deleteRecipe(householdId!, id!),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["recipes", householdId] });
+      await qc.invalidateQueries({ queryKey: ["recipe", householdId, id] });
       nav("/recipes");
     },
   });
 
+  const canSave =
+    ready &&
+    name.trim().length > 0 &&
+    !saveMut.isPending &&
+    !(mode === "edit" && (q.isLoading || !id));
+
   if (!ready) {
     return (
       <Card>
-        <CardHeader><CardTitle>Recept</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Recept</CardTitle>
+        </CardHeader>
         <CardContent className="text-sm text-neutral-600">
           Prvo napravi household u sekciji Nalog.
         </CardContent>
@@ -103,12 +132,13 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               onClick={() => {
                 if (confirm("Obrisati recept?")) delMut.mutate();
               }}
-              disabled={delMut.isPending}
+              disabled={delMut.isPending || q.isLoading}
             >
-              Obriši
+              {delMut.isPending ? "Brišem…" : "Obriši"}
             </Button>
           )}
-          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
+
+          <Button onClick={() => saveMut.mutate()} disabled={!canSave}>
             {saveMut.isPending ? "Čuvam…" : "Sačuvaj"}
           </Button>
         </div>
@@ -119,7 +149,9 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       {saveMut.isError && <div className="text-sm text-red-600">Greška: {(saveMut.error as any)?.message}</div>}
 
       <Card>
-        <CardHeader><CardTitle>Osnovno</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Osnovno</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
           <div>
             <label className="mb-1 block text-sm text-neutral-600">Naziv</label>
@@ -159,7 +191,9 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Koraci</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Koraci</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
           {steps.map((s, idx) => (
             <div key={idx} className="flex gap-2">
@@ -185,6 +219,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               </Button>
             </div>
           ))}
+
           <Button type="button" variant="secondary" onClick={() => setSteps([...steps, ""])}>
             + Dodaj korak
           </Button>
@@ -192,9 +227,11 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Sastojci</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Sastojci</CardTitle>
+        </CardHeader>
         <CardContent className="text-sm text-neutral-600">
-          MVP skeleton: ovde sledeće dodajemo ingredient editor + recipe_ingredients. (RLS je već spreman u bazi.)
+          MVP skeleton: ovde sledeće dodajemo ingredient editor + recipe_ingredients.
         </CardContent>
       </Card>
     </div>
