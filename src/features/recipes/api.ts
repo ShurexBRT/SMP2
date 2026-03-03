@@ -29,39 +29,15 @@ export async function getRecipe(householdId: string, id: string): Promise<Recipe
 }
 
 export async function createRecipe(row: RecipeInsert): Promise<RecipeRow> {
-  // Safety defaults (da ne šaljemo undefined gde ne treba)
-  const payload: RecipeInsert = {
-    ...row,
-    steps: row.steps ?? [],
-    tags: row.tags ?? [],
-    prep_minutes: row.prep_minutes ?? null,
-    cook_minutes: row.cook_minutes ?? null,
-    notes: row.notes ?? null,
-  };
-
-  const { data, error } = await supabase.from("recipes").insert(payload).select("*").single();
+  const { data, error } = await supabase.from("recipes").insert(row).select("*").single();
   if (error) throw error;
   return data;
 }
 
-export async function updateRecipe(
-  householdId: string,
-  id: string,
-  patch: RecipeUpdate
-): Promise<RecipeRow> {
-  const payload: RecipeUpdate = {
-    ...patch,
-    // Normalize optional fields if provided as undefined
-    ...(patch.prep_minutes === undefined ? {} : { prep_minutes: patch.prep_minutes }),
-    ...(patch.cook_minutes === undefined ? {} : { cook_minutes: patch.cook_minutes }),
-    ...(patch.notes === undefined ? {} : { notes: patch.notes }),
-    ...(patch.tags === undefined ? {} : { tags: patch.tags }),
-    ...(patch.steps === undefined ? {} : { steps: patch.steps }),
-  };
-
+export async function updateRecipe(householdId: string, id: string, patch: RecipeUpdate): Promise<RecipeRow> {
   const { data, error } = await supabase
     .from("recipes")
-    .update(payload)
+    .update(patch)
     .eq("household_id", householdId)
     .eq("id", id)
     .select("*")
