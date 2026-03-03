@@ -1,5 +1,12 @@
 export type UUID = string;
 
+type Table<Row, Insert, Update> = {
+  Row: Row;
+  Insert: Insert;
+  Update: Update;
+  Relationships: [];
+};
+
 type HouseholdRole = "owner" | "member";
 type MemberStatus = "invited" | "active";
 type MealType = "breakfast" | "lunch" | "dinner";
@@ -23,7 +30,7 @@ export interface Database {
         Insert: Insert<{
           id?: UUID;
           name: string;
-          created_by?: UUID; // DB default auth.uid()
+          created_by?: UUID;
         }>;
         Update: Update<{
           name: string;
@@ -65,6 +72,7 @@ export interface Database {
           name: string;
           steps: string[];
           tags: string[];
+          meal_types: MealType[]; // ✅ NOVO
           prep_minutes: number | null;
           cook_minutes: number | null;
           default_servings: number;
@@ -78,6 +86,7 @@ export interface Database {
           name: string;
           steps: string[];
           tags?: string[];
+          meal_types?: MealType[]; // ✅ NOVO
           prep_minutes?: number | null;
           cook_minutes?: number | null;
           default_servings?: number;
@@ -87,6 +96,7 @@ export interface Database {
           name: string;
           steps: string[];
           tags: string[];
+          meal_types: MealType[]; // ✅ NOVO
           prep_minutes: number | null;
           cook_minutes: number | null;
           default_servings: number;
