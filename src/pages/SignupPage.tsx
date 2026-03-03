@@ -1,34 +1,60 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
-function getAuthCallbackRedirectTo(): string {
-  return `${window.location.origin}${window.location.pathname}#/auth/callback`;
-}
-
 export function SignupPage() {
+  const nav = useNavigate();
+
   const [email, setEmail] = React.useState("");
-  const [sent, setSent] = React.useState(false);
+  const [password, setPassword] = React.useState("");
+  const [confirm, setConfirm] = React.useState("");
+
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [info, setInfo] = React.useState<string | null>(null);
 
-  async function sendLink(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
+    setInfo(null);
 
+    const eTrim = email.trim();
+
+    if (password.length < 8) {
+      setError("Lozinka mora imati bar 8 karaktera.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Lozinke se ne poklapaju.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: getAuthCallbackRedirectTo() },
+      const { data, error } = await supabase.auth.signUp({
+        email: eTrim,
+        password,
+        options: {
+          // za GH Pages + HashRouter, nek stoji i ovo (koristi se ako je Confirm email ON)
+          emailRedirectTo: `${window.location.origin}${window.location.pathname}#/login`,
+        },
       });
+
       if (error) throw error;
-      setSent(true);
+
+      // Ako je email confirmation ON, user obično nema session odmah.
+      // Ako je OFF, session postoji i možemo da ga pošaljemo na account/onboarding.
+      if (!data.session) {
+        setInfo("Nalog je napravljen. Proveri email i potvrdi nalog, pa se uloguj.");
+        return;
+      }
+
+      nav("/account", { replace: true });
     } catch (err: any) {
-      setError(err?.message ?? "Greška pri slanju linka.");
+      setError(err?.message ?? "Nešto je puklo pri registraciji.");
     } finally {
       setLoading(false);
     }
@@ -41,49 +67,66 @@ export function SignupPage() {
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Registracija</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Unesi email i dobićeš magic link. Posle toga te vodimo na podešavanje.
+            Napravi nalog mailom i lozinkom. Posle toga ide sync za vas dvoje.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>{sent ? "Link poslat" : "Napravi nalog"}</CardTitle>
+            <CardTitle>Napravi nalog</CardTitle>
           </CardHeader>
           <CardContent>
-            {sent ? (
-              <div className="space-y-3 text-sm text-neutral-700">
-                <div>Proveri email i klikni na link. Posle toga te vodimo dalje.</div>
-                <div className="text-xs text-neutral-500">
-                  Ako ne stigne odmah — sačekaj malo. Nemoj spam (rate limit).
-                </div>
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm text-neutral-600">Email</label>
+                <Input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="npr. sandra@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
-            ) : (
-              <form onSubmit={sendLink} className="space-y-3">
-                <div>
-                  <label className="mb-1 block text-sm text-neutral-600">Email</label>
-                  <Input
-                    type="email"
-                    required
-                    placeholder="npr. sandra@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
 
-                {error && <div className="text-sm text-red-600">{error}</div>}
+              <div>
+                <label className="mb-1 block text-sm text-neutral-600">Lozinka</label>
+                <Input
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  placeholder="min 8 karaktera"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
 
-                <Button type="submit" disabled={loading || !email}>
-                  {loading ? "Šaljem…" : "Pošalji magic link"}
-                </Button>
+              <div>
+                <label className="mb-1 block text-sm text-neutral-600">Potvrdi lozinku</label>
+                <Input
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  placeholder="ponovi lozinku"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                />
+              </div>
 
-                <div className="text-xs text-neutral-500">
-                  Već imaš nalog?{" "}
-                  <Link className="underline" to="/login">
-                    Uloguj se
-                  </Link>
-                </div>
-              </form>
-            )}
+              {error && <div className="text-sm text-red-600">{error}</div>}
+              {info && <div className="text-sm text-green-700">{info}</div>}
+
+              <Button type="submit" disabled={loading || !email || !password || !confirm}>
+                {loading ? "Pravim nalog…" : "Napravi nalog"}
+              </Button>
+
+              <div className="text-xs text-neutral-500">
+                Već imaš nalog?{" "}
+                <Link className="underline" to="/login">
+                  Uloguj se
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

@@ -1,34 +1,38 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
-function getAuthCallbackRedirectTo(): string {
-  return `${window.location.origin}${window.location.pathname}#/auth/callback`;
-}
-
 export function LoginPage() {
+  const nav = useNavigate();
+  const loc = useLocation();
+
   const [email, setEmail] = React.useState("");
-  const [sent, setSent] = React.useState(false);
+  const [password, setPassword] = React.useState("");
+
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  async function sendLink(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: getAuthCallbackRedirectTo() },
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
+
       if (error) throw error;
-      setSent(true);
+
+      // vrati na stranicu koju je korisnik pokušao da otvori
+      const from = (loc.state as any)?.from?.pathname ?? "/account";
+      nav(from, { replace: true });
     } catch (err: any) {
-      setError(err?.message ?? "Greška pri slanju linka.");
+      setError(err?.message ?? "Nešto je puklo pri prijavi.");
     } finally {
       setLoading(false);
     }
@@ -41,49 +45,58 @@ export function LoginPage() {
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Prijava</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Unesi email. Poslaćemo ti magic link — bez šifre, bez drame.
+            Uloguj se mailom i šifrom. Bez magije, bez cirkusa.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>{sent ? "Link poslat" : "Uloguj se"}</CardTitle>
+            <CardTitle>Uloguj se</CardTitle>
           </CardHeader>
           <CardContent>
-            {sent ? (
-              <div className="space-y-3 text-sm text-neutral-700">
-                <div>Proveri email i klikni na link. Može da završi u Promotions/Spam — znaš proceduru. 😄</div>
-                <div className="text-xs text-neutral-500">
-                  Nisi dobio? Sačekaj malo pa probaj ponovo (da ne udarimo rate limit).
-                </div>
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm text-neutral-600">Email</label>
+                <Input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="npr. peki@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
-            ) : (
-              <form onSubmit={sendLink} className="space-y-3">
-                <div>
-                  <label className="mb-1 block text-sm text-neutral-600">Email</label>
-                  <Input
-                    type="email"
-                    required
-                    placeholder="npr. peki@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
 
-                {error && <div className="text-sm text-red-600">{error}</div>}
+              <div>
+                <label className="mb-1 block text-sm text-neutral-600">Lozinka</label>
+                <Input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
 
-                <Button type="submit" disabled={loading || !email}>
-                  {loading ? "Šaljem…" : "Pošalji magic link"}
-                </Button>
+              {error && <div className="text-sm text-red-600">{error}</div>}
 
-                <div className="text-xs text-neutral-500">
-                  Prvi put ovde?{" "}
+              <Button type="submit" disabled={loading || !email || !password}>
+                {loading ? "Ulogavam…" : "Uloguj se"}
+              </Button>
+
+              <div className="flex items-center justify-between text-xs text-neutral-500">
+                <span>
+                  Nemaš nalog?{" "}
                   <Link className="underline" to="/signup">
                     Napravi nalog
                   </Link>
-                </div>
-              </form>
-            )}
+                </span>
+
+                {/* Stub za sad */}
+                <span className="opacity-70">Zaboravljena lozinka (uskoro)</span>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>
