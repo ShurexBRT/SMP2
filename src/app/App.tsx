@@ -10,6 +10,8 @@ import { RecipesPage } from "@/pages/RecipesPage";
 import { RecipeEditorPage } from "@/pages/RecipeEditorPage";
 import { ShoppingPage } from "@/pages/ShoppingPage";
 import { InventoryPage } from "@/pages/InventoryPage";
+import { SignupPage } from "@/pages/SignupPage";
+import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 
 export function App() {
   return (
@@ -33,6 +35,9 @@ export function App() {
             <Route path="/shopping" element={<ShoppingPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/account" element={<AccountPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
           </Route>
         </Route>
 

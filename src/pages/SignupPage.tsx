@@ -9,7 +9,7 @@ function getAuthCallbackRedirectTo(): string {
   return `${window.location.origin}${window.location.pathname}#/auth/callback`;
 }
 
-export function LoginPage() {
+export function SignupPage() {
   const [email, setEmail] = React.useState("");
   const [sent, setSent] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -39,22 +39,22 @@ export function LoginPage() {
       <div className="mx-auto max-w-md">
         <div className="mb-6 text-center">
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Prijava</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Registracija</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Unesi email. Poslaćemo ti magic link — bez šifre, bez drame.
+            Unesi email i dobićeš magic link. Posle toga te vodimo na podešavanje.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>{sent ? "Link poslat" : "Uloguj se"}</CardTitle>
+            <CardTitle>{sent ? "Link poslat" : "Napravi nalog"}</CardTitle>
           </CardHeader>
           <CardContent>
             {sent ? (
               <div className="space-y-3 text-sm text-neutral-700">
-                <div>Proveri email i klikni na link. Može da završi u Promotions/Spam — znaš proceduru. 😄</div>
+                <div>Proveri email i klikni na link. Posle toga te vodimo dalje.</div>
                 <div className="text-xs text-neutral-500">
-                  Nisi dobio? Sačekaj malo pa probaj ponovo (da ne udarimo rate limit).
+                  Ako ne stigne odmah — sačekaj malo. Nemoj spam (rate limit).
                 </div>
               </div>
             ) : (
@@ -64,7 +64,7 @@ export function LoginPage() {
                   <Input
                     type="email"
                     required
-                    placeholder="npr. peki@gmail.com"
+                    placeholder="npr. sandra@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -77,9 +77,9 @@ export function LoginPage() {
                 </Button>
 
                 <div className="text-xs text-neutral-500">
-                  Prvi put ovde?{" "}
-                  <Link className="underline" to="/signup">
-                    Napravi nalog
+                  Već imaš nalog?{" "}
+                  <Link className="underline" to="/login">
+                    Uloguj se
                   </Link>
                 </div>
               </form>

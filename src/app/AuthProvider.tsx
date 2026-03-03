@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      setLoading(false); // bitno: posle magic link redirect-a
+      setLoading(false);
     });
 
     return () => {
