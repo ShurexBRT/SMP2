@@ -45,7 +45,7 @@ export function LoginPage() {
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Prijava</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Uloguj se mailom i šifrom. Bez magije, bez cirkusa.
+            Uloguj se mailom i lozinkom. Ako nemaš nalog, napravi ga klikom na link ispod.
           </p>
         </div>
 

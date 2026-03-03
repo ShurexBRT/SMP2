@@ -67,7 +67,7 @@ export function SignupPage() {
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Registracija</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Napravi nalog mailom i lozinkom. Posle toga ide sync za vas dvoje.
+            Napravi nalog mailom i lozinkom.
           </p>
         </div>
 
