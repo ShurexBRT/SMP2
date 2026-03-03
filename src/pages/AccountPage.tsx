@@ -57,7 +57,7 @@ async function inviteMember(householdId: string, email: string) {
 
 export function AccountPage() {
   const { householdId, memberRole, memberEmail, loading, refetch } = useHousehold();
-  const [householdName, setHouseholdName] = React.useState("Peki & Saki");
+  const [householdName, setHouseholdName] = React.useState("...");
   const [inviteEmail, setInviteEmail] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
@@ -70,7 +70,7 @@ export function AccountPage() {
     try {
       await createHousehold(householdName.trim());
       await refetch();
-      setMsg("Household kreiran. Sad možeš da pozoveš Sandru.");
+      setMsg("Household kreiran. Sad možeš da pozoveš novog korisnika.");
     } catch (e: any) {
       setErr(e?.message ?? "Greška.");
     } finally {
@@ -136,7 +136,7 @@ export function AccountPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-neutral-600">
-              Da bi sync radio između vas dvoje, napravimo jedan household koji delite.
+              Da bi sync radio između vas , napravimo jedan household koji delite.
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Naziv</label>
@@ -154,11 +154,11 @@ export function AccountPage() {
       {householdId && memberRole === "owner" && (
         <Card>
           <CardHeader>
-            <CardTitle>Pozovi Sandru</CardTitle>
+            <CardTitle>Pozovi novog korisnika u tvoj household</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-neutral-600">
-              Unesi njen email. Poslaćemo invite + magic link (preko Edge Function).
+              Unesi email. Poslaćemo invite + magic link.
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Email</label>
