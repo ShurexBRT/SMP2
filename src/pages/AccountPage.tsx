@@ -13,7 +13,7 @@ async function createHousehold(name: string) {
   // Create household
   const { data: hh, error: herr } = await supabase
     .from("households")
-    .insert({ name, created_by: u.user.id })
+    .insert({ name })
     .select()
     .single();
   if (herr) throw herr;

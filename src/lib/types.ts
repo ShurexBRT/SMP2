@@ -1,8 +1,3 @@
-// src/lib/types.ts
-// Minimal, stable Supabase Database typing for supabase-js v2.
-// Key detail: each table MUST include `Relationships` (even empty),
-// otherwise supabase-js generics can degrade to `never`.
-
 export type UUID = string;
 
 type HouseholdRole = "owner" | "member";
@@ -11,35 +6,34 @@ type MealType = "breakfast" | "lunch" | "dinner";
 type ShoppingStatus = "open" | "archived";
 type ShoppingSource = "plan" | "manual";
 
-type Table<Row, Insert, Update> = {
-  Row: Row;
-  Insert: Insert;
-  Update: Update;
-  Relationships: [];
-};
+type Row<T> = T;
+type Insert<T> = T;
+type Update<T> = Partial<T>;
 
 export interface Database {
   public: {
     Tables: {
-      households: Table<
-        {
+      households: {
+        Row: Row<{
           id: UUID;
           name: string;
           created_at: string;
           created_by: UUID;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           name: string;
+          created_by?: UUID; // DB default auth.uid()
+        }>;
+        Update: Update<{
+          name: string;
           created_by: UUID;
-        },
-        {
-          name?: string;
-        }
-      >;
+        }>;
+        Relationships: [];
+      };
 
-      household_members: Table<
-        {
+      household_members: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           user_id: UUID | null;
@@ -47,24 +41,25 @@ export interface Database {
           role: HouseholdRole;
           status: MemberStatus;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           user_id?: UUID | null;
           email: string;
           role?: HouseholdRole;
           status?: MemberStatus;
-        },
-        {
-          user_id?: UUID | null;
-          role?: HouseholdRole;
-          status?: MemberStatus;
-        }
-      >;
+        }>;
+        Update: Update<{
+          user_id: UUID | null;
+          role: HouseholdRole;
+          status: MemberStatus;
+        }>;
+        Relationships: [];
+      };
 
-      recipes: Table<
-        {
+      recipes: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           name: string;
@@ -76,8 +71,8 @@ export interface Database {
           notes: string | null;
           created_at: string;
           updated_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           name: string;
@@ -87,40 +82,42 @@ export interface Database {
           cook_minutes?: number | null;
           default_servings?: number;
           notes?: string | null;
-        },
-        {
-          name?: string;
-          steps?: string[];
-          tags?: string[];
-          prep_minutes?: number | null;
-          cook_minutes?: number | null;
-          default_servings?: number;
-          notes?: string | null;
-        }
-      >;
+        }>;
+        Update: Update<{
+          name: string;
+          steps: string[];
+          tags: string[];
+          prep_minutes: number | null;
+          cook_minutes: number | null;
+          default_servings: number;
+          notes: string | null;
+        }>;
+        Relationships: [];
+      };
 
-      ingredients: Table<
-        {
+      ingredients: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           name: string;
           default_unit: string;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           name: string;
           default_unit: string;
-        },
-        {
-          name?: string;
-          default_unit?: string;
-        }
-      >;
+        }>;
+        Update: Update<{
+          name: string;
+          default_unit: string;
+        }>;
+        Relationships: [];
+      };
 
-      recipe_ingredients: Table<
-        {
+      recipe_ingredients: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           recipe_id: UUID;
@@ -129,8 +126,8 @@ export interface Database {
           unit: string;
           optional: boolean;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           recipe_id: UUID;
@@ -138,44 +135,46 @@ export interface Database {
           qty: number;
           unit: string;
           optional?: boolean;
-        },
-        {
-          qty?: number;
-          unit?: string;
-          optional?: boolean;
-        }
-      >;
+        }>;
+        Update: Update<{
+          qty: number;
+          unit: string;
+          optional: boolean;
+        }>;
+        Relationships: [];
+      };
 
-      meal_plans: Table<
-        {
+      meal_plans: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
-          week_start: string; // YYYY-MM-DD
+          week_start: string;
           created_at: string;
           updated_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           week_start: string;
-        },
-        {
-          week_start?: string;
-        }
-      >;
+        }>;
+        Update: Update<{
+          week_start: string;
+        }>;
+        Relationships: [];
+      };
 
-      meal_plan_items: Table<
-        {
+      meal_plan_items: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           meal_plan_id: UUID;
-          date: string; // YYYY-MM-DD
+          date: string;
           meal_type: MealType;
           recipe_id: UUID;
           servings: number;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           meal_plan_id: UUID;
@@ -183,28 +182,26 @@ export interface Database {
           meal_type: MealType;
           recipe_id: UUID;
           servings: number;
-        },
-        {
-          date?: string;
-          meal_type?: MealType;
-          recipe_id?: UUID;
-          servings?: number;
-        }
-      >;
+        }>;
+        Update: Update<{
+          servings: number;
+        }>;
+        Relationships: [];
+      };
 
-      inventory_items: Table<
-        {
+      inventory_items: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           ingredient_id: UUID;
           qty: number;
           unit: string;
           min_qty: number | null;
-          expires_at: string | null; // YYYY-MM-DD
+          expires_at: string | null;
           created_at: string;
           updated_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           ingredient_id: UUID;
@@ -212,36 +209,38 @@ export interface Database {
           unit: string;
           min_qty?: number | null;
           expires_at?: string | null;
-        },
-        {
-          qty?: number;
-          unit?: string;
-          min_qty?: number | null;
-          expires_at?: string | null;
-        }
-      >;
+        }>;
+        Update: Update<{
+          qty: number;
+          unit: string;
+          min_qty: number | null;
+          expires_at: string | null;
+        }>;
+        Relationships: [];
+      };
 
-      shopping_lists: Table<
-        {
+      shopping_lists: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
-          week_start: string; // YYYY-MM-DD
+          week_start: string;
           status: ShoppingStatus;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           week_start: string;
           status?: ShoppingStatus;
-        },
-        {
-          status?: ShoppingStatus;
-        }
-      >;
+        }>;
+        Update: Update<{
+          status: ShoppingStatus;
+        }>;
+        Relationships: [];
+      };
 
-      shopping_list_items: Table<
-        {
+      shopping_list_items: {
+        Row: Row<{
           id: UUID;
           household_id: UUID;
           shopping_list_id: UUID;
@@ -253,8 +252,8 @@ export interface Database {
           checked: boolean;
           source: ShoppingSource;
           created_at: string;
-        },
-        {
+        }>;
+        Insert: Insert<{
           id?: UUID;
           household_id: UUID;
           shopping_list_id: UUID;
@@ -265,19 +264,18 @@ export interface Database {
           category: string;
           checked?: boolean;
           source?: ShoppingSource;
-        },
-        {
-          ingredient_id?: UUID | null;
-          label?: string;
-          qty?: number | null;
-          unit?: string | null;
-          category?: string;
-          checked?: boolean;
-          source?: ShoppingSource;
-        }
-      >;
+        }>;
+        Update: Update<{
+          label: string;
+          qty: number | null;
+          unit: string | null;
+          category: string;
+          checked: boolean;
+          source: ShoppingSource;
+        }>;
+        Relationships: [];
+      };
     };
-
     Views: {};
     Functions: {};
     Enums: {};
