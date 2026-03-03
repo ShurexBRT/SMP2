@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
-function normalizeTags(raw: string) {
-  return raw
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
+const MEAL_TYPES = [
+  { key: "breakfast", label: "Doručak" },
+  { key: "lunch", label: "Ručak" },
+  { key: "dinner", label: "Večera" },
+] as const;
 
 export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const { id } = useParams();
@@ -25,7 +24,6 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
     queryKey: ["recipe", householdId, id],
     queryFn: () => getRecipe(householdId!, id!),
     enabled: ready && mode === "edit" && !!id,
-    staleTime: 30_000,
   });
 
   const [name, setName] = React.useState("");
@@ -36,55 +34,48 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const [notes, setNotes] = React.useState<string>("");
   const [steps, setSteps] = React.useState<string[]>([""]);
 
-  // Prevent overwriting user edits if query refetches
-  const hydratedRef = React.useRef(false);
+  // ✅ NOVO
+  const [mealTypes, setMealTypes] = React.useState<string[]>(["lunch"]);
 
   React.useEffect(() => {
-    if (mode !== "edit") return;
-    if (!q.data) return;
-    if (hydratedRef.current) return;
-
-    hydratedRef.current = true;
-    setName(q.data.name ?? "");
-    setTags((q.data.tags ?? []).join(", "));
-    setPrep(q.data.prep_minutes?.toString() ?? "");
-    setCook(q.data.cook_minutes?.toString() ?? "");
-    setServings((q.data.default_servings ?? 2).toString());
-    setNotes(q.data.notes ?? "");
-    setSteps(q.data.steps?.length ? q.data.steps : [""]);
+    if (q.data && mode === "edit") {
+      setName(q.data.name);
+      setTags((q.data.tags ?? []).join(", "));
+      setPrep(q.data.prep_minutes?.toString() ?? "");
+      setCook(q.data.cook_minutes?.toString() ?? "");
+      setServings(q.data.default_servings?.toString() ?? "2");
+      setNotes(q.data.notes ?? "");
+      setSteps(q.data.steps?.length ? q.data.steps : [""]);
+      setMealTypes((q.data.meal_types as any) ?? ["lunch"]);
+    }
   }, [q.data, mode]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
       const input: RecipeInput = RecipeSchema.parse({
-        name: name.trim(),
+        name,
         steps: steps.map((s) => s.trim()).filter(Boolean),
-        tags: normalizeTags(tags),
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        meal_types: mealTypes,
         prep_minutes: prep.trim() ? Number(prep) : null,
         cook_minutes: cook.trim() ? Number(cook) : null,
         default_servings: Number(servings || 2),
-        notes: notes.trim() ? notes.trim() : null,
+        notes: notes.trim() ? notes : null,
       });
 
       if (mode === "create") {
         return createRecipe({
           household_id: householdId!,
           ...input,
-          tags: input.tags ?? [],
-          steps: input.steps ?? [],
         });
       }
-
-      // update expects partial; we send full validated payload (safe)
-      return updateRecipe(householdId!, id!, {
-        ...input,
-        tags: input.tags ?? [],
-        steps: input.steps ?? [],
-      });
+      return updateRecipe(householdId!, id!, input as any);
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["recipes", householdId] });
-      await qc.invalidateQueries({ queryKey: ["recipe", householdId, id] });
       nav("/recipes");
     },
   });
@@ -93,16 +84,9 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
     mutationFn: async () => deleteRecipe(householdId!, id!),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["recipes", householdId] });
-      await qc.invalidateQueries({ queryKey: ["recipe", householdId, id] });
       nav("/recipes");
     },
   });
-
-  const canSave =
-    ready &&
-    name.trim().length > 0 &&
-    !saveMut.isPending &&
-    !(mode === "edit" && (q.isLoading || !id));
 
   if (!ready) {
     return (
@@ -110,9 +94,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
         <CardHeader>
           <CardTitle>Recept</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-neutral-600">
-          Prvo napravi household u sekciji Nalog.
-        </CardContent>
+        <CardContent className="text-sm text-neutral-600">Prvo napravi household u sekciji Nalog.</CardContent>
       </Card>
     );
   }
@@ -132,13 +114,12 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               onClick={() => {
                 if (confirm("Obrisati recept?")) delMut.mutate();
               }}
-              disabled={delMut.isPending || q.isLoading}
+              disabled={delMut.isPending}
             >
-              {delMut.isPending ? "Brišem…" : "Obriši"}
+              Obriši
             </Button>
           )}
-
-          <Button onClick={() => saveMut.mutate()} disabled={!canSave}>
+          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
             {saveMut.isPending ? "Čuvam…" : "Sačuvaj"}
           </Button>
         </div>
@@ -158,6 +139,35 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="npr. Piletina sa pirinčem" />
           </div>
 
+          {/* ✅ NOVO: Tip obroka */}
+          <div>
+            <label className="mb-1 block text-sm text-neutral-600">Tip obroka</label>
+            <div className="flex flex-wrap gap-3">
+              {MEAL_TYPES.map((t) => {
+                const checked = mealTypes.includes(t.key);
+                return (
+                  <label
+                    key={t.key}
+                    className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${
+                      checked ? "border-neutral-400 bg-neutral-50" : "border-neutral-200 bg-white"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) setMealTypes([...mealTypes, t.key]);
+                        else setMealTypes(mealTypes.filter((x) => x !== t.key));
+                      }}
+                    />
+                    {t.label}
+                  </label>
+                );
+              })}
+            </div>
+            <div className="mt-1 text-xs text-neutral-500">Plan će filtrirati recepte po ovome.</div>
+          </div>
+
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Prep (min)</label>
@@ -169,7 +179,12 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Porcije</label>
-              <Input inputMode="numeric" value={servings} onChange={(e) => setServings(e.target.value)} placeholder="2" />
+              <Input
+                inputMode="numeric"
+                value={servings}
+                onChange={(e) => setServings(e.target.value)}
+                placeholder="2"
+              />
             </div>
           </div>
 
@@ -219,8 +234,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               </Button>
             </div>
           ))}
-
-          <Button type="button" variant="secondary" onClick={() => setSteps([...steps, ""])}>
+          <Button type="button" variant="secondary" onClick={() => setSteps([...steps, ""] ,)}>
             + Dodaj korak
           </Button>
         </CardContent>
