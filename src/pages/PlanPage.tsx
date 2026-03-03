@@ -3,12 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRequireHousehold } from "@/features/household/guard";
 import { startOfWeekISO } from "@/lib/utils";
 import { listRecipes } from "@/features/recipes/api";
-import {
-  deleteMealPlanItem,
-  getOrCreateMealPlan,
-  listMealPlanItems,
-  upsertMealPlanItem,
-} from "@/features/plan/api";
+import { deleteMealPlanItem, getOrCreateMealPlan, listMealPlanItems, upsertMealPlanItem } from "@/features/plan/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -29,11 +24,6 @@ function addDaysISO(iso: string, days: number) {
 function formatDayLabel(iso: string) {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("sr-RS", { weekday: "short", day: "2-digit", month: "2-digit" });
-}
-
-function hasMealTag(tags: string[] | null | undefined, meal: MealType): boolean {
-  const t = (tags ?? []).map((x) => x.toLowerCase());
-  return t.includes(meal);
 }
 
 export function PlanPage() {
@@ -79,9 +69,7 @@ export function PlanPage() {
         <CardHeader>
           <CardTitle>Plan</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-neutral-600">
-          Prvo napravi household (Nalog) da bi plan bio shared.
-        </CardContent>
+        <CardContent className="text-sm text-neutral-600">Prvo napravi household (Nalog) da bi plan bio shared.</CardContent>
       </Card>
     );
   }
@@ -97,7 +85,7 @@ export function PlanPage() {
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold">Nedeljni plan</h2>
-          <div className="text-sm text-neutral-500">Dropdown je filtriran po tagovima breakfast/lunch/dinner.</div>
+          <div className="text-sm text-neutral-500">Izaberi recepte po danima. Sve se sync-uje preko household-a.</div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -113,16 +101,11 @@ export function PlanPage() {
         </div>
       </div>
 
-      {(recipesQ.isLoading || planQ.isLoading || itemsQ.isLoading) && (
-        <div className="text-sm text-neutral-500">Učitavanje…</div>
-      )}
+      {(recipesQ.isLoading || planQ.isLoading || itemsQ.isLoading) && <div className="text-sm text-neutral-500">Učitavanje…</div>}
 
       {(recipesQ.isError || planQ.isError || itemsQ.isError) && (
         <div className="text-sm text-red-600">
-          Greška:{" "}
-          {(recipesQ.error as any)?.message ||
-            (planQ.error as any)?.message ||
-            (itemsQ.error as any)?.message}
+          Greška: {(recipesQ.error as any)?.message || (planQ.error as any)?.message || (itemsQ.error as any)?.message}
         </div>
       )}
 
@@ -144,8 +127,7 @@ export function PlanPage() {
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {MEALS.map((m) => {
                     const existing = byKey.get(`${date}|${m.key}`);
-
-                    const filtered = recipes.filter((r) => hasMealTag(r.tags, m.key));
+                    const filtered = recipes.filter((r) => (r.tags ?? []).includes(m.key)); // ✅ filter po TAG-u
 
                     return (
                       <div key={m.key} className="rounded-2xl border border-neutral-200 p-3">
@@ -198,7 +180,7 @@ export function PlanPage() {
 
                           {filtered.length === 0 && (
                             <div className="text-xs text-neutral-500">
-                              Nema recepata za {m.label}. Uđi u recept i čekiraj Tip obroka.
+                              Nema recepata za {m.label}. Uredi recept i čekiraj “Tip obroka”.
                             </div>
                           )}
 

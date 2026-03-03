@@ -5,16 +5,13 @@ import { listRecipes } from "@/features/recipes/api";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MEAL_TAGS } from "@/features/recipes/schema";
 
-type MealType = "breakfast" | "lunch" | "dinner";
-
-const MEAL_LABEL: Record<MealType, string> = {
+const MEAL_LABEL: Record<string, string> = {
   breakfast: "Doručak",
   lunch: "Ručak",
   dinner: "Večera",
 };
-
-const MEAL_TAGS: MealType[] = ["breakfast", "lunch", "dinner"];
 
 export function RecipesPage() {
   const { householdId, ready } = useRequireHousehold();
@@ -62,9 +59,9 @@ export function RecipesPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {(q.data ?? []).map((r) => {
-          const tags = (r.tags ?? []).map((t) => t.toLowerCase());
-          const mealBadges = MEAL_TAGS.filter((m) => tags.includes(m));
-          const normalTags = tags.filter((t) => !MEAL_TAGS.includes(t as MealType));
+          const tags = r.tags ?? [];
+          const mealBadges = (MEAL_TAGS as string[]).filter((m) => tags.includes(m));
+          const otherTags = tags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
 
           return (
             <Link key={r.id} to={`/recipes/${r.id}`}>
@@ -75,19 +72,18 @@ export function RecipesPage() {
                     <span className="text-xs text-neutral-500">{r.default_servings} por.</span>
                   </CardTitle>
                 </CardHeader>
-
                 <CardContent className="space-y-2">
                   <div className="text-sm text-neutral-600 line-clamp-2">{r.steps?.[0] ?? "—"}</div>
 
                   <div className="flex flex-wrap gap-1">
                     {mealBadges.map((m) => (
-                      <Badge key={`m-${m}`}>{MEAL_LABEL[m]}</Badge>
+                      <Badge key={m}>{MEAL_LABEL[m] ?? m}</Badge>
                     ))}
                   </div>
 
                   <div className="flex flex-wrap gap-1">
-                    {normalTags.slice(0, 6).map((t) => (
-                      <Badge key={t}>{t}</Badge>
+                    {otherTags.slice(0, 6).map((t, i) => (
+                      <Badge key={`${t}-${i}`}>{t}</Badge>
                     ))}
                   </div>
                 </CardContent>

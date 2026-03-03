@@ -3,38 +3,32 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRequireHousehold } from "@/features/household/guard";
 import { createRecipe, deleteRecipe, getRecipe, updateRecipe } from "@/features/recipes/api";
-import { RecipeSchema, type RecipeInput } from "@/features/recipes/schema";
+import { RecipeSchema, type RecipeInput, MEAL_TAGS } from "@/features/recipes/schema";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
-type MealType = "breakfast" | "lunch" | "dinner";
+type MealKey = "breakfast" | "lunch" | "dinner";
 
-const MEAL_TYPES: { key: MealType; label: string }[] = [
+const MEAL_TYPES: { key: MealKey; label: string }[] = [
   { key: "breakfast", label: "Doručak" },
   { key: "lunch", label: "Ručak" },
   { key: "dinner", label: "Večera" },
 ];
 
-const MEAL_TAGS: MealType[] = ["breakfast", "lunch", "dinner"];
-
-function normalizeTags(input: string): string[] {
-  return input
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
+function normalizeTags(list: string[]) {
+  return Array.from(new Set(list.map((t) => t.trim()).filter(Boolean)));
 }
 
-function uniqueLower(tags: string[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const t of tags) {
-    const k = t.toLowerCase();
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(k);
-  }
-  return out;
+function extractMealTags(tags: string[]): MealKey[] {
+  const set = new Set(tags);
+  return (MEAL_TAGS as MealKey[]).filter((m) => set.has(m));
+}
+
+function applyMealTags(tags: string[], mealTypes: MealKey[]) {
+  // izbaci stare meal tagove, ubaci nove
+  const withoutMeal = tags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
+  return normalizeTags([...withoutMeal, ...mealTypes]);
 }
 
 export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
@@ -50,43 +44,50 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   });
 
   const [name, setName] = React.useState("");
-  const [tagsText, setTagsText] = React.useState<string>(""); // samo "normalni" tagovi (bez meal tagova)
+  const [tags, setTags] = React.useState<string>(""); // comma-separated (bez meal tagova u inputu)
   const [prep, setPrep] = React.useState<string>("");
   const [cook, setCook] = React.useState<string>("");
   const [servings, setServings] = React.useState<string>("2");
   const [notes, setNotes] = React.useState<string>("");
   const [steps, setSteps] = React.useState<string[]>([""]);
 
-  // Meal type checkbox UI -> čuva se u tags kao "breakfast/lunch/dinner"
-  const [mealTypes, setMealTypes] = React.useState<MealType[]>(["lunch"]);
+  // ✅ meal tipovi se čuvaju kao tagovi, ali UI drži zasebno
+  const [mealTypes, setMealTypes] = React.useState<MealKey[]>(["lunch"]);
 
   React.useEffect(() => {
     if (q.data && mode === "edit") {
       setName(q.data.name);
+      const allTags = normalizeTags(q.data.tags ?? []);
+      const meals = extractMealTags(allTags);
+      setMealTypes(meals.length ? meals : ["lunch"]);
+
+      // UI "Tagovi (zarez)" NE prikazuje meal tagove da ne pravi konfuziju
+      const nonMealTags = allTags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
+      setTags(nonMealTags.join(", "));
+
       setPrep(q.data.prep_minutes?.toString() ?? "");
       setCook(q.data.cook_minutes?.toString() ?? "");
       setServings(q.data.default_servings?.toString() ?? "2");
       setNotes(q.data.notes ?? "");
       setSteps(q.data.steps?.length ? q.data.steps : [""]);
-
-      const allTags = (q.data.tags ?? []).map((t) => t.toLowerCase());
-      const pickedMeals = MEAL_TAGS.filter((m) => allTags.includes(m));
-      setMealTypes((pickedMeals.length ? pickedMeals : ["lunch"]) as MealType[]);
-
-      const normalTags = allTags.filter((t) => !MEAL_TAGS.includes(t as MealType));
-      setTagsText(normalTags.join(", "));
     }
   }, [q.data, mode]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      const normalTags = normalizeTags(tagsText).map((t) => t.toLowerCase());
-      const combinedTags = uniqueLower([...normalTags, ...mealTypes]);
+      const rawTags = normalizeTags(
+        tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      );
+
+      const mergedTags = applyMealTags(rawTags, mealTypes);
 
       const input: RecipeInput = RecipeSchema.parse({
         name,
         steps: steps.map((s) => s.trim()).filter(Boolean),
-        tags: combinedTags,
+        tags: mergedTags,
         prep_minutes: prep.trim() ? Number(prep) : null,
         cook_minutes: cook.trim() ? Number(cook) : null,
         default_servings: Number(servings || 2),
@@ -99,8 +100,6 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
           ...input,
         });
       }
-
-      // update patch
       return updateRecipe(householdId!, id!, input);
     },
     onSuccess: async () => {
@@ -133,7 +132,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{mode === "create" ? "Novi recept" : "Uredi recept"}</h2>
-          <div className="text-sm text-neutral-500">Tekst-only MVP. Sastojci stižu sledeće.</div>
+          <div className="text-sm text-neutral-500">Text-only MVP. Sastojci stižu sledeće.</div>
         </div>
 
         <div className="flex gap-2">
@@ -184,7 +183,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
                       type="checkbox"
                       checked={checked}
                       onChange={(e) => {
-                        if (e.target.checked) setMealTypes((prev) => uniqueLower([...prev, t.key]) as MealType[]);
+                        if (e.target.checked) setMealTypes((prev) => normalizeTags([...prev, t.key]) as MealKey[]);
                         else setMealTypes((prev) => prev.filter((x) => x !== t.key));
                       }}
                     />
@@ -194,7 +193,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               })}
             </div>
             <div className="mt-1 text-xs text-neutral-500">
-              Ovo se upisuje u <span className="font-mono">tags</span> kao breakfast/lunch/dinner.
+              Ovo se čuva kao tagovi: <span className="font-mono">breakfast/lunch/dinner</span>.
             </div>
           </div>
 
@@ -215,7 +214,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
 
           <div>
             <label className="mb-1 block text-sm text-neutral-600">Tagovi (zarez)</label>
-            <Input value={tagsText} onChange={(e) => setTagsText(e.target.value)} placeholder="brzo, fit, jeftino" />
+            <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="brzo, fit, jeftino" />
             <div className="mt-1 text-xs text-neutral-500">
               Ne moraš ovde da pišeš breakfast/lunch/dinner — to radi checkbox iznad.
             </div>
@@ -273,7 +272,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
           <CardTitle>Sastojci</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-neutral-600">
-          Sledeće: ingredient editor + recipe_ingredients povezivanje.
+          Sledeće: ingredient editor + recipe_ingredients.
         </CardContent>
       </Card>
     </div>
