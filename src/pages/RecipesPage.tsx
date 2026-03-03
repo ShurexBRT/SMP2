@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
+const MEAL_LABEL: Record<string, string> = {
+  breakfast: "Doručak",
+  lunch: "Ručak",
+  dinner: "Večera",
+};
+
 export function RecipesPage() {
   const { householdId, ready } = useRequireHousehold();
 
@@ -18,10 +24,10 @@ export function RecipesPage() {
   if (!ready) {
     return (
       <Card>
-        <CardHeader><CardTitle>Recepti</CardTitle></CardHeader>
-        <CardContent className="text-sm text-neutral-600">
-          Idi na <span className="font-medium">Nalog</span> i napravi household.
-        </CardContent>
+        <CardHeader>
+          <CardTitle>Recepti</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-neutral-600">Idi na Nalog i napravi household.</CardContent>
       </Card>
     );
   }
@@ -43,10 +49,10 @@ export function RecipesPage() {
 
       {!q.isLoading && (q.data?.length ?? 0) === 0 && (
         <Card>
-          <CardHeader><CardTitle>Nema recepata</CardTitle></CardHeader>
-          <CardContent className="text-sm text-neutral-600">
-            Ubaci prvi recept i posle je sve lagano.
-          </CardContent>
+          <CardHeader>
+            <CardTitle>Nema recepata</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-neutral-600">Ubaci prvi recept i posle je sve lagano.</CardContent>
         </Card>
       )}
 
@@ -61,9 +67,14 @@ export function RecipesPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-sm text-neutral-600 line-clamp-2">
-                  {r.steps?.[0] ?? "—"}
+                <div className="text-sm text-neutral-600 line-clamp-2">{r.steps?.[0] ?? "—"}</div>
+
+                <div className="flex flex-wrap gap-1">
+                  {(r.meal_types ?? []).map((m, i) => (
+                    <Badge key={`m-${i}`}>{MEAL_LABEL[m] ?? m}</Badge>
+                  ))}
                 </div>
+
                 <div className="flex flex-wrap gap-1">
                   {(r.tags ?? []).slice(0, 6).map((t, i) => (
                     <Badge key={i}>{t}</Badge>

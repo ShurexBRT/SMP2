@@ -4,16 +4,15 @@ import { useRequireHousehold } from "@/features/household/guard";
 import { startOfWeekISO } from "@/lib/utils";
 import { listRecipes } from "@/features/recipes/api";
 import {
+  deleteMealPlanItem,
   getOrCreateMealPlan,
   listMealPlanItems,
   upsertMealPlanItem,
-  deleteMealPlanItem,
 } from "@/features/plan/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 type MealType = "breakfast" | "lunch" | "dinner";
-
 const MEALS: { key: MealType; label: string }[] = [
   { key: "breakfast", label: "Doručak" },
   { key: "lunch", label: "Ručak" },
@@ -28,17 +27,12 @@ function addDaysISO(iso: string, days: number) {
 
 function formatDayLabel(iso: string) {
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("sr-RS", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return d.toLocaleDateString("sr-RS", { weekday: "short", day: "2-digit", month: "2-digit" });
 }
 
 export function PlanPage() {
   const qc = useQueryClient();
   const { householdId, ready } = useRequireHousehold();
-
   const [weekStart, setWeekStart] = React.useState(() => startOfWeekISO(new Date()));
 
   const recipesQ = useQuery({
@@ -88,42 +82,42 @@ export function PlanPage() {
 
   const items = itemsQ.data ?? [];
   const recipes = recipesQ.data ?? [];
-
   const byKey = new Map<string, (typeof items)[number]>();
   for (const it of items) byKey.set(`${it.date}|${it.meal_type}`, it);
-
-  const loading = recipesQ.isLoading || planQ.isLoading || itemsQ.isLoading;
-  const errorMsg =
-    (recipesQ.error as any)?.message ||
-    (planQ.error as any)?.message ||
-    (itemsQ.error as any)?.message ||
-    null;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold">Nedeljni plan</h2>
-          <div className="text-sm text-neutral-500">
-            Izaberi recepte po danima. Sve se sync-uje preko household-a.
-          </div>
+          <div className="text-sm text-neutral-500">Izaberi recepte po danima. Sve se sync-uje preko household-a.</div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setWeekStart(addDaysISO(weekStart, -7))} disabled={loading}>
+          <Button variant="secondary" onClick={() => setWeekStart(addDaysISO(weekStart, -7))}>
             ← Prethodna
           </Button>
           <div className="text-sm text-neutral-600">
             Od <span className="font-medium">{weekStart}</span>
           </div>
-          <Button variant="secondary" onClick={() => setWeekStart(addDaysISO(weekStart, 7))} disabled={loading}>
+          <Button variant="secondary" onClick={() => setWeekStart(addDaysISO(weekStart, 7))}>
             Sledeća →
           </Button>
         </div>
       </div>
 
-      {loading && <div className="text-sm text-neutral-500">Učitavanje…</div>}
-      {errorMsg && <div className="text-sm text-red-600">Greška: {errorMsg}</div>}
+      {(recipesQ.isLoading || planQ.isLoading || itemsQ.isLoading) && (
+        <div className="text-sm text-neutral-500">Učitavanje…</div>
+      )}
+
+      {(recipesQ.isError || planQ.isError || itemsQ.isError) && (
+        <div className="text-sm text-red-600">
+          Greška:{" "}
+          {(recipesQ.error as any)?.message ||
+            (planQ.error as any)?.message ||
+            (itemsQ.error as any)?.message}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -142,8 +136,10 @@ export function PlanPage() {
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {MEALS.map((m) => {
-                    const key = `${date}|${m.key}`;
-                    const existing = byKey.get(key);
+                    const existing = byKey.get(`${date}|${m.key}`);
+
+                    // ✅ FILTER: samo recepti koji imaju taj meal_type
+                    const filtered = recipes.filter((r) => (r.meal_types ?? []).includes(m.key));
 
                     return (
                       <div key={m.key} className="rounded-2xl border border-neutral-200 p-3">
@@ -187,19 +183,25 @@ export function PlanPage() {
                             }}
                           >
                             <option value="">Izaberi recept…</option>
-                            {recipes.map((r) => (
+                            {filtered.map((r) => (
                               <option key={r.id} value={r.id}>
                                 {r.name}
                               </option>
                             ))}
                           </select>
 
+                          {filtered.length === 0 && (
+                            <div className="text-xs text-neutral-500">
+                              Nema recepata za {m.label}. Dodaj u Receptima “Tip obroka”.
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between">
                             <div className="text-xs text-neutral-500">Porcije</div>
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="secondary"
-                                disabled={!existing || upsertMut.isPending}
+                                disabled={!existing}
                                 onClick={() => {
                                   if (!existing) return;
                                   upsertMut.mutate({
@@ -219,7 +221,7 @@ export function PlanPage() {
 
                               <Button
                                 variant="secondary"
-                                disabled={!existing || upsertMut.isPending}
+                                disabled={!existing}
                                 onClick={() => {
                                   if (!existing) return;
                                   upsertMut.mutate({
@@ -236,15 +238,6 @@ export function PlanPage() {
                               </Button>
                             </div>
                           </div>
-
-                          {existing && (
-                            <div className="text-xs text-neutral-500">
-                              Recept:{" "}
-                              <span className="font-medium">
-                                {recipes.find((r) => r.id === existing.recipe_id)?.name ?? "—"}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
