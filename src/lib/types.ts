@@ -1,46 +1,40 @@
 export type UUID = string;
 
-type Table<Row, Insert, Update> = {
+export type Table<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
   Relationships: [];
 };
 
-type HouseholdRole = "owner" | "member";
-type MemberStatus = "invited" | "active";
-type MealType = "breakfast" | "lunch" | "dinner";
-type ShoppingStatus = "open" | "archived";
-type ShoppingSource = "plan" | "manual";
-
-type Row<T> = T;
-type Insert<T> = T;
-type Update<T> = Partial<T>;
+export type HouseholdRole = "owner" | "member";
+export type MemberStatus = "invited" | "active";
+export type MealType = "breakfast" | "lunch" | "dinner";
+export type ShoppingStatus = "open" | "archived";
+export type ShoppingSource = "plan" | "manual";
 
 export interface Database {
   public: {
     Tables: {
-      households: {
-        Row: Row<{
+      households: Table<
+        {
           id: UUID;
           name: string;
           created_at: string;
           created_by: UUID;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           name: string;
-          created_by?: UUID;
-        }>;
-        Update: Update<{
-          name: string;
-          created_by: UUID;
-        }>;
-        Relationships: [];
-      };
+          created_by?: UUID; // DB može default auth.uid()
+        },
+        {
+          name?: string;
+        }
+      >;
 
-      household_members: {
-        Row: Row<{
+      household_members: Table<
+        {
           id: UUID;
           household_id: UUID;
           user_id: UUID | null;
@@ -48,86 +42,80 @@ export interface Database {
           role: HouseholdRole;
           status: MemberStatus;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           user_id?: UUID | null;
           email: string;
           role?: HouseholdRole;
           status?: MemberStatus;
-        }>;
-        Update: Update<{
-          user_id: UUID | null;
-          role: HouseholdRole;
-          status: MemberStatus;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          user_id?: UUID | null;
+          role?: HouseholdRole;
+          status?: MemberStatus;
+        }
+      >;
 
-      recipes: {
-        Row: Row<{
+      recipes: Table<
+        {
           id: UUID;
           household_id: UUID;
           name: string;
           steps: string[];
           tags: string[];
-          meal_types: MealType[]; // ✅ NOVO
           prep_minutes: number | null;
           cook_minutes: number | null;
           default_servings: number;
           notes: string | null;
           created_at: string;
           updated_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           name: string;
           steps: string[];
           tags?: string[];
-          meal_types?: MealType[]; // ✅ NOVO
           prep_minutes?: number | null;
           cook_minutes?: number | null;
           default_servings?: number;
           notes?: string | null;
-        }>;
-        Update: Update<{
-          name: string;
-          steps: string[];
-          tags: string[];
-          meal_types: MealType[]; // ✅ NOVO
-          prep_minutes: number | null;
-          cook_minutes: number | null;
-          default_servings: number;
-          notes: string | null;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          name?: string;
+          steps?: string[];
+          tags?: string[];
+          prep_minutes?: number | null;
+          cook_minutes?: number | null;
+          default_servings?: number;
+          notes?: string | null;
+        }
+      >;
 
-      ingredients: {
-        Row: Row<{
+      ingredients: Table<
+        {
           id: UUID;
           household_id: UUID;
           name: string;
           default_unit: string;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           name: string;
           default_unit: string;
-        }>;
-        Update: Update<{
-          name: string;
-          default_unit: string;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          name?: string;
+          default_unit?: string;
+        }
+      >;
 
-      recipe_ingredients: {
-        Row: Row<{
+      recipe_ingredients: Table<
+        {
           id: UUID;
           household_id: UUID;
           recipe_id: UUID;
@@ -136,8 +124,8 @@ export interface Database {
           unit: string;
           optional: boolean;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           recipe_id: UUID;
@@ -145,36 +133,34 @@ export interface Database {
           qty: number;
           unit: string;
           optional?: boolean;
-        }>;
-        Update: Update<{
-          qty: number;
-          unit: string;
-          optional: boolean;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          qty?: number;
+          unit?: string;
+          optional?: boolean;
+        }
+      >;
 
-      meal_plans: {
-        Row: Row<{
+      meal_plans: Table<
+        {
           id: UUID;
           household_id: UUID;
           week_start: string;
           created_at: string;
           updated_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           week_start: string;
-        }>;
-        Update: Update<{
-          week_start: string;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          week_start?: string;
+        }
+      >;
 
-      meal_plan_items: {
-        Row: Row<{
+      meal_plan_items: Table<
+        {
           id: UUID;
           household_id: UUID;
           meal_plan_id: UUID;
@@ -183,8 +169,8 @@ export interface Database {
           recipe_id: UUID;
           servings: number;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           meal_plan_id: UUID;
@@ -192,15 +178,15 @@ export interface Database {
           meal_type: MealType;
           recipe_id: UUID;
           servings: number;
-        }>;
-        Update: Update<{
-          servings: number;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          recipe_id?: UUID;
+          servings?: number;
+        }
+      >;
 
-      inventory_items: {
-        Row: Row<{
+      inventory_items: Table<
+        {
           id: UUID;
           household_id: UUID;
           ingredient_id: UUID;
@@ -210,8 +196,8 @@ export interface Database {
           expires_at: string | null;
           created_at: string;
           updated_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           ingredient_id: UUID;
@@ -219,38 +205,36 @@ export interface Database {
           unit: string;
           min_qty?: number | null;
           expires_at?: string | null;
-        }>;
-        Update: Update<{
-          qty: number;
-          unit: string;
-          min_qty: number | null;
-          expires_at: string | null;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          qty?: number;
+          unit?: string;
+          min_qty?: number | null;
+          expires_at?: string | null;
+        }
+      >;
 
-      shopping_lists: {
-        Row: Row<{
+      shopping_lists: Table<
+        {
           id: UUID;
           household_id: UUID;
           week_start: string;
           status: ShoppingStatus;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           week_start: string;
           status?: ShoppingStatus;
-        }>;
-        Update: Update<{
-          status: ShoppingStatus;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          status?: ShoppingStatus;
+        }
+      >;
 
-      shopping_list_items: {
-        Row: Row<{
+      shopping_list_items: Table<
+        {
           id: UUID;
           household_id: UUID;
           shopping_list_id: UUID;
@@ -262,8 +246,8 @@ export interface Database {
           checked: boolean;
           source: ShoppingSource;
           created_at: string;
-        }>;
-        Insert: Insert<{
+        },
+        {
           id?: UUID;
           household_id: UUID;
           shopping_list_id: UUID;
@@ -274,17 +258,16 @@ export interface Database {
           category: string;
           checked?: boolean;
           source?: ShoppingSource;
-        }>;
-        Update: Update<{
-          label: string;
-          qty: number | null;
-          unit: string | null;
-          category: string;
-          checked: boolean;
-          source: ShoppingSource;
-        }>;
-        Relationships: [];
-      };
+        },
+        {
+          label?: string;
+          qty?: number | null;
+          unit?: string | null;
+          category?: string;
+          checked?: boolean;
+          source?: ShoppingSource;
+        }
+      >;
     };
     Views: {};
     Functions: {};

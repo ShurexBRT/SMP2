@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 type MealType = "breakfast" | "lunch" | "dinner";
+
 const MEALS: { key: MealType; label: string }[] = [
   { key: "breakfast", label: "Doručak" },
   { key: "lunch", label: "Ručak" },
@@ -28,6 +29,11 @@ function addDaysISO(iso: string, days: number) {
 function formatDayLabel(iso: string) {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("sr-RS", { weekday: "short", day: "2-digit", month: "2-digit" });
+}
+
+function hasMealTag(tags: string[] | null | undefined, meal: MealType): boolean {
+  const t = (tags ?? []).map((x) => x.toLowerCase());
+  return t.includes(meal);
 }
 
 export function PlanPage() {
@@ -82,6 +88,7 @@ export function PlanPage() {
 
   const items = itemsQ.data ?? [];
   const recipes = recipesQ.data ?? [];
+
   const byKey = new Map<string, (typeof items)[number]>();
   for (const it of items) byKey.set(`${it.date}|${it.meal_type}`, it);
 
@@ -90,7 +97,7 @@ export function PlanPage() {
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold">Nedeljni plan</h2>
-          <div className="text-sm text-neutral-500">Izaberi recepte po danima. Sve se sync-uje preko household-a.</div>
+          <div className="text-sm text-neutral-500">Dropdown je filtriran po tagovima breakfast/lunch/dinner.</div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -138,8 +145,7 @@ export function PlanPage() {
                   {MEALS.map((m) => {
                     const existing = byKey.get(`${date}|${m.key}`);
 
-                    // ✅ FILTER: samo recepti koji imaju taj meal_type
-                    const filtered = recipes.filter((r) => (r.meal_types ?? []).includes(m.key));
+                    const filtered = recipes.filter((r) => hasMealTag(r.tags, m.key));
 
                     return (
                       <div key={m.key} className="rounded-2xl border border-neutral-200 p-3">
@@ -192,7 +198,7 @@ export function PlanPage() {
 
                           {filtered.length === 0 && (
                             <div className="text-xs text-neutral-500">
-                              Nema recepata za {m.label}. Dodaj u Receptima “Tip obroka”.
+                              Nema recepata za {m.label}. Uđi u recept i čekiraj Tip obroka.
                             </div>
                           )}
 

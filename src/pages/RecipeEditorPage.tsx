@@ -8,11 +8,34 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
-const MEAL_TYPES = [
+type MealType = "breakfast" | "lunch" | "dinner";
+
+const MEAL_TYPES: { key: MealType; label: string }[] = [
   { key: "breakfast", label: "Doručak" },
   { key: "lunch", label: "Ručak" },
   { key: "dinner", label: "Večera" },
-] as const;
+];
+
+const MEAL_TAGS: MealType[] = ["breakfast", "lunch", "dinner"];
+
+function normalizeTags(input: string): string[] {
+  return input
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+function uniqueLower(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of tags) {
+    const k = t.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
 
 export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const { id } = useParams();
@@ -27,39 +50,43 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   });
 
   const [name, setName] = React.useState("");
-  const [tags, setTags] = React.useState<string>(""); // comma-separated
+  const [tagsText, setTagsText] = React.useState<string>(""); // samo "normalni" tagovi (bez meal tagova)
   const [prep, setPrep] = React.useState<string>("");
   const [cook, setCook] = React.useState<string>("");
   const [servings, setServings] = React.useState<string>("2");
   const [notes, setNotes] = React.useState<string>("");
   const [steps, setSteps] = React.useState<string[]>([""]);
 
-  // ✅ NOVO
-  const [mealTypes, setMealTypes] = React.useState<string[]>(["lunch"]);
+  // Meal type checkbox UI -> čuva se u tags kao "breakfast/lunch/dinner"
+  const [mealTypes, setMealTypes] = React.useState<MealType[]>(["lunch"]);
 
   React.useEffect(() => {
     if (q.data && mode === "edit") {
       setName(q.data.name);
-      setTags((q.data.tags ?? []).join(", "));
       setPrep(q.data.prep_minutes?.toString() ?? "");
       setCook(q.data.cook_minutes?.toString() ?? "");
       setServings(q.data.default_servings?.toString() ?? "2");
       setNotes(q.data.notes ?? "");
       setSteps(q.data.steps?.length ? q.data.steps : [""]);
-      setMealTypes((q.data.meal_types as any) ?? ["lunch"]);
+
+      const allTags = (q.data.tags ?? []).map((t) => t.toLowerCase());
+      const pickedMeals = MEAL_TAGS.filter((m) => allTags.includes(m));
+      setMealTypes((pickedMeals.length ? pickedMeals : ["lunch"]) as MealType[]);
+
+      const normalTags = allTags.filter((t) => !MEAL_TAGS.includes(t as MealType));
+      setTagsText(normalTags.join(", "));
     }
   }, [q.data, mode]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
+      const normalTags = normalizeTags(tagsText).map((t) => t.toLowerCase());
+      const combinedTags = uniqueLower([...normalTags, ...mealTypes]);
+
       const input: RecipeInput = RecipeSchema.parse({
         name,
         steps: steps.map((s) => s.trim()).filter(Boolean),
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-        meal_types: mealTypes,
+        tags: combinedTags,
         prep_minutes: prep.trim() ? Number(prep) : null,
         cook_minutes: cook.trim() ? Number(cook) : null,
         default_servings: Number(servings || 2),
@@ -72,7 +99,9 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
           ...input,
         });
       }
-      return updateRecipe(householdId!, id!, input as any);
+
+      // update patch
+      return updateRecipe(householdId!, id!, input);
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["recipes", householdId] });
@@ -104,7 +133,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{mode === "create" ? "Novi recept" : "Uredi recept"}</h2>
-          <div className="text-sm text-neutral-500">Samo tekst za sada, slike kasnije.</div>
+          <div className="text-sm text-neutral-500">Tekst-only MVP. Sastojci stižu sledeće.</div>
         </div>
 
         <div className="flex gap-2">
@@ -139,7 +168,6 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="npr. Piletina sa pirinčem" />
           </div>
 
-          {/* ✅ NOVO: Tip obroka */}
           <div>
             <label className="mb-1 block text-sm text-neutral-600">Tip obroka</label>
             <div className="flex flex-wrap gap-3">
@@ -156,8 +184,8 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
                       type="checkbox"
                       checked={checked}
                       onChange={(e) => {
-                        if (e.target.checked) setMealTypes([...mealTypes, t.key]);
-                        else setMealTypes(mealTypes.filter((x) => x !== t.key));
+                        if (e.target.checked) setMealTypes((prev) => uniqueLower([...prev, t.key]) as MealType[]);
+                        else setMealTypes((prev) => prev.filter((x) => x !== t.key));
                       }}
                     />
                     {t.label}
@@ -165,7 +193,9 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
                 );
               })}
             </div>
-            <div className="mt-1 text-xs text-neutral-500">Plan će filtrirati recepte po ovome.</div>
+            <div className="mt-1 text-xs text-neutral-500">
+              Ovo se upisuje u <span className="font-mono">tags</span> kao breakfast/lunch/dinner.
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -179,18 +209,16 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Porcije</label>
-              <Input
-                inputMode="numeric"
-                value={servings}
-                onChange={(e) => setServings(e.target.value)}
-                placeholder="2"
-              />
+              <Input inputMode="numeric" value={servings} onChange={(e) => setServings(e.target.value)} placeholder="2" />
             </div>
           </div>
 
           <div>
             <label className="mb-1 block text-sm text-neutral-600">Tagovi (zarez)</label>
-            <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="brzo, fit, jeftino" />
+            <Input value={tagsText} onChange={(e) => setTagsText(e.target.value)} placeholder="brzo, fit, jeftino" />
+            <div className="mt-1 text-xs text-neutral-500">
+              Ne moraš ovde da pišeš breakfast/lunch/dinner — to radi checkbox iznad.
+            </div>
           </div>
 
           <div>
@@ -234,7 +262,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               </Button>
             </div>
           ))}
-          <Button type="button" variant="secondary" onClick={() => setSteps([...steps, ""] ,)}>
+          <Button type="button" variant="secondary" onClick={() => setSteps((prev) => [...prev, ""])}>
             + Dodaj korak
           </Button>
         </CardContent>
@@ -245,7 +273,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
           <CardTitle>Sastojci</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-neutral-600">
-          MVP skeleton: ovde sledeće dodajemo ingredient editor + recipe_ingredients.
+          Sledeće: ingredient editor + recipe_ingredients povezivanje.
         </CardContent>
       </Card>
     </div>

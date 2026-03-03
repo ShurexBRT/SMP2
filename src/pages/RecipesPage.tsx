@@ -6,11 +6,15 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
-const MEAL_LABEL: Record<string, string> = {
+type MealType = "breakfast" | "lunch" | "dinner";
+
+const MEAL_LABEL: Record<MealType, string> = {
   breakfast: "Doručak",
   lunch: "Ručak",
   dinner: "Večera",
 };
+
+const MEAL_TAGS: MealType[] = ["breakfast", "lunch", "dinner"];
 
 export function RecipesPage() {
   const { householdId, ready } = useRequireHousehold();
@@ -57,33 +61,40 @@ export function RecipesPage() {
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {(q.data ?? []).map((r) => (
-          <Link key={r.id} to={`/recipes/${r.id}`}>
-            <Card className="transition hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{r.name}</span>
-                  <span className="text-xs text-neutral-500">{r.default_servings} por.</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="text-sm text-neutral-600 line-clamp-2">{r.steps?.[0] ?? "—"}</div>
+        {(q.data ?? []).map((r) => {
+          const tags = (r.tags ?? []).map((t) => t.toLowerCase());
+          const mealBadges = MEAL_TAGS.filter((m) => tags.includes(m));
+          const normalTags = tags.filter((t) => !MEAL_TAGS.includes(t as MealType));
 
-                <div className="flex flex-wrap gap-1">
-                  {(r.meal_types ?? []).map((m, i) => (
-                    <Badge key={`m-${i}`}>{MEAL_LABEL[m] ?? m}</Badge>
-                  ))}
-                </div>
+          return (
+            <Link key={r.id} to={`/recipes/${r.id}`}>
+              <Card className="transition hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{r.name}</span>
+                    <span className="text-xs text-neutral-500">{r.default_servings} por.</span>
+                  </CardTitle>
+                </CardHeader>
 
-                <div className="flex flex-wrap gap-1">
-                  {(r.tags ?? []).slice(0, 6).map((t, i) => (
-                    <Badge key={i}>{t}</Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                <CardContent className="space-y-2">
+                  <div className="text-sm text-neutral-600 line-clamp-2">{r.steps?.[0] ?? "—"}</div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {mealBadges.map((m) => (
+                      <Badge key={`m-${m}`}>{MEAL_LABEL[m]}</Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {normalTags.slice(0, 6).map((t) => (
+                      <Badge key={t}>{t}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
