@@ -20,7 +20,7 @@ export function RecipesPage() {
       <Card>
         <CardHeader><CardTitle>Recepti</CardTitle></CardHeader>
         <CardContent className="text-sm text-neutral-600">
-          Idi na <span className="font-medium">Nalog</span> i napravi household (pa pozovi Sandru).
+          Idi na <span className="font-medium">Nalog</span> i napravi household.
         </CardContent>
       </Card>
     );
