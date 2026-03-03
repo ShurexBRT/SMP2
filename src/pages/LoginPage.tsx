@@ -4,6 +4,12 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
+function getMagicLinkRedirectTo(): string {
+  // GitHub Pages + HashRouter: mora #/ da bi Supabase redirect radio kako treba
+  // Primer: https://shurexbrt.github.io/SMP2/#/
+  return `${window.location.origin}${window.location.pathname}#/`;
+}
+
 export function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [sent, setSent] = React.useState(false);
@@ -14,13 +20,17 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
+      const redirectTo = getMagicLinkRedirectTo();
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: window.location.origin + window.location.pathname,
+          emailRedirectTo: redirectTo,
         },
       });
+
       if (error) throw error;
       setSent(true);
     } catch (err: any) {
