@@ -7,8 +7,14 @@ import { RecipeSchema, type RecipeInput, MEAL_TAGS } from "@/features/recipes/sc
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+
 import { listIngredients, upsertIngredientByName } from "@/features/ingredients/api";
-import { addRecipeIngredient, deleteRecipeIngredient, listRecipeIngredients, updateRecipeIngredient } from "@/features/recipes/ingredientsApi";
+import {
+  addRecipeIngredient,
+  deleteRecipeIngredient,
+  listRecipeIngredients,
+  updateRecipeIngredient,
+} from "@/features/recipes/ingredientsApi";
 
 type MealKey = "breakfast" | "lunch" | "dinner";
 
@@ -18,7 +24,7 @@ const MEAL_TYPES: { key: MealKey; label: string }[] = [
   { key: "dinner", label: "Večera" },
 ];
 
-function normalizeTags(list: string[]) {
+function uniq(list: string[]) {
   return Array.from(new Set(list.map((t) => t.trim()).filter(Boolean)));
 }
 
@@ -28,9 +34,8 @@ function extractMealTags(tags: string[]): MealKey[] {
 }
 
 function applyMealTags(tags: string[], mealTypes: MealKey[]) {
-  // izbaci stare meal tagove, ubaci nove
   const withoutMeal = tags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
-  return normalizeTags([...withoutMeal, ...mealTypes]);
+  return uniq([...withoutMeal, ...mealTypes]);
 }
 
 export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
@@ -39,45 +44,44 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
   const qc = useQueryClient();
   const { householdId, ready } = useRequireHousehold();
 
-  const q = useQuery({
+  const recipeQ = useQuery({
     queryKey: ["recipe", householdId, id],
     queryFn: () => getRecipe(householdId!, id!),
     enabled: ready && mode === "edit" && !!id,
   });
 
   const [name, setName] = React.useState("");
-  const [tags, setTags] = React.useState<string>(""); // comma-separated (bez meal tagova u inputu)
+  const [tags, setTags] = React.useState<string>(""); // user tags (bez meal tagova)
   const [prep, setPrep] = React.useState<string>("");
   const [cook, setCook] = React.useState<string>("");
   const [servings, setServings] = React.useState<string>("2");
   const [notes, setNotes] = React.useState<string>("");
   const [steps, setSteps] = React.useState<string[]>([""]);
-
-  // ✅ meal tipovi se čuvaju kao tagovi, ali UI drži zasebno
   const [mealTypes, setMealTypes] = React.useState<MealKey[]>(["lunch"]);
 
   React.useEffect(() => {
-    if (q.data && mode === "edit") {
-      setName(q.data.name);
-      const allTags = normalizeTags(q.data.tags ?? []);
+    if (recipeQ.data && mode === "edit") {
+      const r = recipeQ.data;
+      setName(r.name);
+
+      const allTags = uniq(r.tags ?? []);
       const meals = extractMealTags(allTags);
       setMealTypes(meals.length ? meals : ["lunch"]);
 
-      // UI "Tagovi (zarez)" NE prikazuje meal tagove da ne pravi konfuziju
       const nonMealTags = allTags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
       setTags(nonMealTags.join(", "));
 
-      setPrep(q.data.prep_minutes?.toString() ?? "");
-      setCook(q.data.cook_minutes?.toString() ?? "");
-      setServings(q.data.default_servings?.toString() ?? "2");
-      setNotes(q.data.notes ?? "");
-      setSteps(q.data.steps?.length ? q.data.steps : [""]);
+      setPrep(r.prep_minutes?.toString() ?? "");
+      setCook(r.cook_minutes?.toString() ?? "");
+      setServings(r.default_servings?.toString() ?? "2");
+      setNotes(r.notes ?? "");
+      setSteps(r.steps?.length ? r.steps : [""]);
     }
-  }, [q.data, mode]);
+  }, [recipeQ.data, mode]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      const rawTags = normalizeTags(
+      const rawTags = uniq(
         tags
           .split(",")
           .map((t) => t.trim())
@@ -97,10 +101,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       });
 
       if (mode === "create") {
-        return createRecipe({
-          household_id: householdId!,
-          ...input,
-        });
+        return createRecipe({ household_id: householdId!, ...input });
       }
       return updateRecipe(householdId!, id!, input);
     },
@@ -134,7 +135,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{mode === "create" ? "Novi recept" : "Uredi recept"}</h2>
-          <div className="text-sm text-neutral-500">Text-only MVP. Sastojci stižu sledeće.</div>
+          <div className="text-sm text-neutral-500">Text MVP + sastojci. Slike kasnije.</div>
         </div>
 
         <div className="flex gap-2">
@@ -155,8 +156,8 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
         </div>
       </div>
 
-      {q.isLoading && mode === "edit" && <div className="text-sm text-neutral-500">Učitavanje…</div>}
-      {q.isError && <div className="text-sm text-red-600">Greška: {(q.error as any)?.message}</div>}
+      {recipeQ.isLoading && mode === "edit" && <div className="text-sm text-neutral-500">Učitavanje…</div>}
+      {recipeQ.isError && <div className="text-sm text-red-600">Greška: {(recipeQ.error as any)?.message}</div>}
       {saveMut.isError && <div className="text-sm text-red-600">Greška: {(saveMut.error as any)?.message}</div>}
 
       <Card>
@@ -185,7 +186,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
                       type="checkbox"
                       checked={checked}
                       onChange={(e) => {
-                        if (e.target.checked) setMealTypes((prev) => normalizeTags([...prev, t.key]) as MealKey[]);
+                        if (e.target.checked) setMealTypes((prev) => uniq([...prev, t.key]) as MealKey[]);
                         else setMealTypes((prev) => prev.filter((x) => x !== t.key));
                       }}
                     />
@@ -195,7 +196,8 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
               })}
             </div>
             <div className="mt-1 text-xs text-neutral-500">
-              Ovo se čuva kao tagovi: <span className="font-mono">breakfast/lunch/dinner</span>.
+              Čuva se u <span className="font-mono">tags</span> kao:{" "}
+              <span className="font-mono">breakfast/lunch/dinner</span>.
             </div>
           </div>
 
@@ -217,9 +219,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
           <div>
             <label className="mb-1 block text-sm text-neutral-600">Tagovi (zarez)</label>
             <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="brzo, fit, jeftino" />
-            <div className="mt-1 text-xs text-neutral-500">
-              Ne moraš ovde da pišeš breakfast/lunch/dinner — to radi checkbox iznad.
-            </div>
+            <div className="mt-1 text-xs text-neutral-500">Ne piši ovde breakfast/lunch/dinner — to je gore.</div>
           </div>
 
           <div>
@@ -270,23 +270,22 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       </Card>
 
       <Card>
-  <CardHeader><CardTitle>Sastojci</CardTitle></CardHeader>
-  <CardContent className="space-y-3">
-    {mode === "create" && (
-      <div className="text-sm text-neutral-600">
-        Sačuvaj recept prvo, pa onda dodaj sastojke.
-      </div>
-    )}
-
-    {mode === "edit" && (
-      <IngredientsEditor householdId={householdId!} recipeId={id!} />
-    )}
-  </CardContent>
-</Card>
+        <CardHeader>
+          <CardTitle>Sastojci</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {mode === "create" ? (
+            <div className="text-sm text-neutral-600">Sačuvaj recept prvo, pa onda dodaj sastojke.</div>
+          ) : (
+            <IngredientsEditor householdId={householdId!} recipeId={id!} />
+          )}
+        </CardContent>
+      </Card>
     </div>
-    
   );
-  function IngredientsEditor({ householdId, recipeId }: { householdId: string; recipeId: string }) {
+}
+
+function IngredientsEditor({ householdId, recipeId }: { householdId: string; recipeId: string }) {
   const qc = useQueryClient();
 
   const ingredientsQ = useQuery({
@@ -306,13 +305,13 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
 
   const addMut = useMutation({
     mutationFn: async () => {
-      const ing = await upsertIngredientByName({ householdId, name, defaultUnit: unit });
+      const ing = await upsertIngredientByName({ householdId, name: name.trim(), defaultUnit: unit.trim() || "kom" });
       await addRecipeIngredient({
         householdId,
         recipeId,
         ingredientId: ing.id,
         qty: Number(qty || 1),
-        unit: unit.trim(),
+        unit: unit.trim() || "kom",
         optional,
       });
     },
@@ -366,7 +365,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       <div className="space-y-2">
         {rows.length === 0 && <div className="text-sm text-neutral-600">Nema sastojaka još.</div>}
 
-        {rows.map((r) => (
+        {rows.map((r: any) => (
           <div key={r.id} className="rounded-2xl border border-neutral-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
               <div className="text-sm font-medium">
@@ -379,7 +378,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Input
-                value={String(r.qty)}
+                value={String(r.qty ?? "")}
                 onChange={(e) =>
                   updMut.mutate({
                     householdId,
@@ -392,7 +391,7 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
                 inputMode="numeric"
               />
               <Input
-                value={r.unit}
+                value={String(r.unit ?? "")}
                 onChange={(e) =>
                   updMut.mutate({
                     householdId,
@@ -425,5 +424,4 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       </div>
     </div>
   );
-}
 }

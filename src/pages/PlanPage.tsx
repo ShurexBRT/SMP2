@@ -6,6 +6,7 @@ import { listRecipes } from "@/features/recipes/api";
 import { deleteMealPlanItem, getOrCreateMealPlan, listMealPlanItems, upsertMealPlanItem } from "@/features/plan/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { MEAL_TAGS } from "@/features/recipes/schema";
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
@@ -113,6 +114,7 @@ export function PlanPage() {
         <CardHeader>
           <CardTitle>Ova nedelja</CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-4">
           {Array.from({ length: 7 }).map((_, dayIdx) => {
             const date = addDaysISO(weekStart, dayIdx);
@@ -127,7 +129,9 @@ export function PlanPage() {
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {MEALS.map((m) => {
                     const existing = byKey.get(`${date}|${m.key}`);
-                    const filtered = recipes.filter((r) => (r.tags ?? []).includes(m.key)); // ✅ filter po TAG-u
+
+                    // Filter recipes by MEAL TAG in recipes.tags (breakfast/lunch/dinner)
+                    const filtered = recipes.filter((r) => (r.tags ?? []).includes(m.key));
 
                     return (
                       <div key={m.key} className="rounded-2xl border border-neutral-200 p-3">
@@ -181,6 +185,7 @@ export function PlanPage() {
                           {filtered.length === 0 && (
                             <div className="text-xs text-neutral-500">
                               Nema recepata za {m.label}. Uredi recept i čekiraj “Tip obroka”.
+                              <span className="ml-1 font-mono">({MEAL_TAGS.join("/")})</span>
                             </div>
                           )}
 

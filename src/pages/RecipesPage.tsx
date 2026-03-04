@@ -60,7 +60,7 @@ export function RecipesPage() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {(q.data ?? []).map((r) => {
           const tags = r.tags ?? [];
-          const mealBadges = (MEAL_TAGS as string[]).filter((m) => tags.includes(m));
+          const mealBadges = tags.filter((t) => (MEAL_TAGS as string[]).includes(t));
           const otherTags = tags.filter((t) => !(MEAL_TAGS as string[]).includes(t));
 
           return (
@@ -75,15 +75,17 @@ export function RecipesPage() {
                 <CardContent className="space-y-2">
                   <div className="text-sm text-neutral-600 line-clamp-2">{r.steps?.[0] ?? "—"}</div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {mealBadges.map((m) => (
-                      <Badge key={m}>{MEAL_LABEL[m] ?? m}</Badge>
-                    ))}
-                  </div>
+                  {mealBadges.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {mealBadges.map((m, i) => (
+                        <Badge key={`m-${i}`}>{MEAL_LABEL[m] ?? m}</Badge>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-1">
                     {otherTags.slice(0, 6).map((t, i) => (
-                      <Badge key={`${t}-${i}`}>{t}</Badge>
+                      <Badge key={`t-${i}`}>{t}</Badge>
                     ))}
                   </div>
                 </CardContent>
