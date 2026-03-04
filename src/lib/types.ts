@@ -1,4 +1,14 @@
+// src/lib/types.ts
+
 export type UUID = string;
+
+export type HouseholdRole = "owner" | "member";
+export type MemberStatus = "invited" | "active";
+
+export type MealType = "breakfast" | "lunch" | "dinner";
+
+export type ShoppingStatus = "open" | "archived";
+export type ShoppingSource = "plan" | "manual";
 
 export type Table<Row, Insert, Update> = {
   Row: Row;
@@ -6,12 +16,6 @@ export type Table<Row, Insert, Update> = {
   Update: Update;
   Relationships: [];
 };
-
-export type HouseholdRole = "owner" | "member";
-export type MemberStatus = "invited" | "active";
-export type MealType = "breakfast" | "lunch" | "dinner";
-export type ShoppingStatus = "open" | "archived";
-export type ShoppingSource = "plan" | "manual";
 
 export interface Database {
   public: {
@@ -26,7 +30,7 @@ export interface Database {
         {
           id?: UUID;
           name: string;
-          created_by?: UUID; // DB može default auth.uid()
+          created_by?: UUID; // DB može da popuni default auth.uid()
         },
         {
           name?: string;
@@ -47,12 +51,13 @@ export interface Database {
           id?: UUID;
           household_id: UUID;
           user_id?: UUID | null;
-          email: string;
+          email: string; // ✅ BITNO: zbog tvog insert-a
           role?: HouseholdRole;
           status?: MemberStatus;
         },
         {
           user_id?: UUID | null;
+          email?: string;
           role?: HouseholdRole;
           status?: MemberStatus;
         }
@@ -91,6 +96,7 @@ export interface Database {
           cook_minutes?: number | null;
           default_servings?: number;
           notes?: string | null;
+          updated_at?: string;
         }
       >;
 
@@ -145,7 +151,7 @@ export interface Database {
         {
           id: UUID;
           household_id: UUID;
-          week_start: string;
+          week_start: string; // YYYY-MM-DD
           created_at: string;
           updated_at: string;
         },
@@ -156,6 +162,7 @@ export interface Database {
         },
         {
           week_start?: string;
+          updated_at?: string;
         }
       >;
 
@@ -164,7 +171,7 @@ export interface Database {
           id: UUID;
           household_id: UUID;
           meal_plan_id: UUID;
-          date: string;
+          date: string; // YYYY-MM-DD
           meal_type: MealType;
           recipe_id: UUID;
           servings: number;
@@ -211,6 +218,7 @@ export interface Database {
           unit?: string;
           min_qty?: number | null;
           expires_at?: string | null;
+          updated_at?: string;
         }
       >;
 
@@ -218,7 +226,7 @@ export interface Database {
         {
           id: UUID;
           household_id: UUID;
-          week_start: string;
+          week_start: string; // YYYY-MM-DD
           status: ShoppingStatus;
           created_at: string;
         },
@@ -260,6 +268,7 @@ export interface Database {
           source?: ShoppingSource;
         },
         {
+          ingredient_id?: UUID | null;
           label?: string;
           qty?: number | null;
           unit?: string | null;
@@ -269,6 +278,7 @@ export interface Database {
         }
       >;
     };
+
     Views: {};
     Functions: {};
     Enums: {};

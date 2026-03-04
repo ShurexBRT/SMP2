@@ -4,7 +4,6 @@ import { useHousehold } from "@/app/HouseholdProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { ENV } from "@/lib/env";
 
 async function createHousehold(name: string) {
   const { data: u } = await supabase.auth.getUser();
@@ -13,7 +12,7 @@ async function createHousehold(name: string) {
   // Create household
   const { data: hh, error: herr } = await supabase
     .from("households")
-    .insert({ name })
+    .insert({ name, created_by: u.user.id })
     .select()
     .single();
   if (herr) throw herr;
@@ -32,27 +31,19 @@ async function createHousehold(name: string) {
 }
 
 async function inviteMember(householdId: string, email: string) {
-  if (!ENV.INVITE_FUNCTION_URL) {
-    throw new Error("Missing VITE_INVITE_FUNCTION_URL (Edge Function URL).");
-  }
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) throw new Error("Email je obavezan");
 
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) throw new Error("No auth token");
-
-  const res = await fetch(ENV.INVITE_FUNCTION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ household_id: householdId, email }),
+  // Invite row (no email sending). Invited user is linked on first login/signup (HouseholdProvider).
+  const { error } = await supabase.from("household_members").insert({
+    household_id: householdId,
+    user_id: null,
+    email: normalized,
+    role: "member",
+    status: "invited",
   });
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || "Invite failed");
-  }
+  if (error) throw error;
 }
 
 export function AccountPage() {
@@ -85,7 +76,7 @@ export function AccountPage() {
     setErr(null);
     try {
       await inviteMember(householdId, inviteEmail.trim());
-      setMsg("Poziv poslat. Kad klikne magic link, biće spojena na household.");
+      setMsg("Poziv upisan. Neka se korisnik prijavi/registruje sa tim email-om — app ga automatski spaja na household.");
       setInviteEmail("");
     } catch (e: any) {
       setErr(e?.message ?? "Greška.");
@@ -135,9 +126,7 @@ export function AccountPage() {
             <CardTitle>Setup household</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-sm text-neutral-600">
-              Da bi sync radio između vas , napravimo jedan household koji delite.
-            </div>
+            <div className="text-sm text-neutral-600">Da bi sync radio između vas, napravimo jedan household koji delite.</div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Naziv</label>
               <Input value={householdName} onChange={(e) => setHouseholdName(e.target.value)} />
@@ -154,11 +143,12 @@ export function AccountPage() {
       {householdId && memberRole === "owner" && (
         <Card>
           <CardHeader>
-            <CardTitle>Pozovi novog korisnika u tvoj household</CardTitle>
+            <CardTitle>Pozovi novog korisnika u household</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-neutral-600">
-              Unesi email. Poslaćemo invite + magic link.
+              Unesi email osobe koju želiš u household. Kad se ta osoba uloguje (login ili signup) sa tim email-om,
+              automatski postaje član.
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Email</label>
@@ -169,9 +159,10 @@ export function AccountPage() {
                 placeholder="sandra@gmail.com"
               />
             </div>
+
             <div className="text-xs text-neutral-500">
-              Napomena: da bi ovo radilo, moraš da deployuješ Edge Function i upišeš
-              <span className="font-mono"> VITE_INVITE_FUNCTION_URL</span>.
+              Napomena: ovo je “invite without email”. Ako hoćeš i fizičko slanje email poziva,
+              ubacujemo kasnije Edge Function + email provider.
             </div>
 
             {err && <div className="text-sm text-red-600">{err}</div>}
