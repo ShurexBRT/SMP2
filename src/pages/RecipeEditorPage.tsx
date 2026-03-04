@@ -7,6 +7,8 @@ import { RecipeSchema, type RecipeInput, MEAL_TAGS } from "@/features/recipes/sc
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { listIngredients, upsertIngredientByName } from "@/features/ingredients/api";
+import { addRecipeIngredient, deleteRecipeIngredient, listRecipeIngredients, updateRecipeIngredient } from "@/features/recipes/ingredientsApi";
 
 type MealKey = "breakfast" | "lunch" | "dinner";
 
@@ -268,13 +270,160 @@ export function RecipeEditorPage({ mode }: { mode: "create" | "edit" }) {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Sastojci</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-neutral-600">
-          Sledeće: ingredient editor + recipe_ingredients.
-        </CardContent>
-      </Card>
+  <CardHeader><CardTitle>Sastojci</CardTitle></CardHeader>
+  <CardContent className="space-y-3">
+    {mode === "create" && (
+      <div className="text-sm text-neutral-600">
+        Sačuvaj recept prvo, pa onda dodaj sastojke.
+      </div>
+    )}
+
+    {mode === "edit" && (
+      <IngredientsEditor householdId={householdId!} recipeId={id!} />
+    )}
+  </CardContent>
+</Card>
+    </div>
+    
+  );
+  function IngredientsEditor({ householdId, recipeId }: { householdId: string; recipeId: string }) {
+  const qc = useQueryClient();
+
+  const ingredientsQ = useQuery({
+    queryKey: ["ingredients", householdId],
+    queryFn: () => listIngredients(householdId),
+  });
+
+  const recipeIngQ = useQuery({
+    queryKey: ["recipeIngredients", householdId, recipeId],
+    queryFn: () => listRecipeIngredients({ householdId, recipeId }),
+  });
+
+  const [name, setName] = React.useState("");
+  const [qty, setQty] = React.useState("1");
+  const [unit, setUnit] = React.useState("kom");
+  const [optional, setOptional] = React.useState(false);
+
+  const addMut = useMutation({
+    mutationFn: async () => {
+      const ing = await upsertIngredientByName({ householdId, name, defaultUnit: unit });
+      await addRecipeIngredient({
+        householdId,
+        recipeId,
+        ingredientId: ing.id,
+        qty: Number(qty || 1),
+        unit: unit.trim(),
+        optional,
+      });
+    },
+    onSuccess: async () => {
+      setName("");
+      setQty("1");
+      setUnit("kom");
+      setOptional(false);
+      await qc.invalidateQueries({ queryKey: ["recipeIngredients", householdId, recipeId] });
+      await qc.invalidateQueries({ queryKey: ["ingredients", householdId] });
+    },
+  });
+
+  const delMut = useMutation({
+    mutationFn: (id: string) => deleteRecipeIngredient({ householdId, id }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipeIngredients", householdId, recipeId] });
+    },
+  });
+
+  const updMut = useMutation({
+    mutationFn: updateRecipeIngredient,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["recipeIngredients", householdId, recipeId] });
+    },
+  });
+
+  const rows = recipeIngQ.data ?? [];
+
+  return (
+    <div className="space-y-3">
+      {(ingredientsQ.isError || recipeIngQ.isError) && (
+        <div className="text-sm text-red-600">
+          Greška: {(ingredientsQ.error as any)?.message || (recipeIngQ.error as any)?.message}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="npr. Pirinač" />
+        <Input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="numeric" placeholder="qty" />
+        <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="g / ml / kom" />
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
+          <input type="checkbox" checked={optional} onChange={(e) => setOptional(e.target.checked)} />
+          opcionalno
+        </label>
+        <Button onClick={() => addMut.mutate()} disabled={addMut.isPending || !name.trim()}>
+          {addMut.isPending ? "Dodajem…" : "Dodaj"}
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {rows.length === 0 && <div className="text-sm text-neutral-600">Nema sastojaka još.</div>}
+
+        {rows.map((r) => (
+          <div key={r.id} className="rounded-2xl border border-neutral-200 px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-medium">
+                {r.ingredient_name} {r.optional ? <span className="text-xs text-neutral-500">(opc.)</span> : null}
+              </div>
+              <Button variant="danger" onClick={() => delMut.mutate(r.id)} disabled={delMut.isPending}>
+                Obriši
+              </Button>
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Input
+                value={String(r.qty)}
+                onChange={(e) =>
+                  updMut.mutate({
+                    householdId,
+                    id: r.id,
+                    qty: Number(e.target.value || 0),
+                    unit: r.unit,
+                    optional: !!r.optional,
+                  })
+                }
+                inputMode="numeric"
+              />
+              <Input
+                value={r.unit}
+                onChange={(e) =>
+                  updMut.mutate({
+                    householdId,
+                    id: r.id,
+                    qty: r.qty,
+                    unit: e.target.value,
+                    optional: !!r.optional,
+                  })
+                }
+              />
+              <label className="flex items-center gap-2 text-sm text-neutral-600">
+                <input
+                  type="checkbox"
+                  checked={!!r.optional}
+                  onChange={(e) =>
+                    updMut.mutate({
+                      householdId,
+                      id: r.id,
+                      qty: r.qty,
+                      unit: r.unit,
+                      optional: e.target.checked,
+                    })
+                  }
+                />
+                opcionalno
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
+}
 }
