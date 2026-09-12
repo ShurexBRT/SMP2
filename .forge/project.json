@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "projectKey": "SMP",
+  "name": "Smart Meal Planner v2",
+  "repository": "ShurexBRT/SMP2",
+  "defaultBranch": "main",
+  "forgeUrl": "https://shurexbrt.github.io/Forge/",
+  "ticketRequired": true,
+  "roles": ["Planner", "Builder", "Reviewer", "QA", "Browser", "Release"],
+  "branchPattern": "agent/{role}/{ticket}-{slug}",
+  "runtime": "React PWA / GitHub Pages",
+  "criticalSurfaces": ["Supabase Auth", "RLS", "household scoping", "meal planning", "inventory", "shopping list", "HashRouter/Pages", "invite Edge Function"]
+}
