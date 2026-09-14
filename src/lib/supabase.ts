@@ -7,10 +7,10 @@ export const supabase = createClient<Database>(
   ENV.SUPABASE_ANON_KEY,
   {
     auth: {
-      // GH Pages + HashRouter friendly
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      flowType: "pkce",
       storageKey: "smp2-auth",
     },
   }
