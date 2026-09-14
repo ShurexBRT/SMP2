@@ -3,65 +3,80 @@
 Modern rewrite of the original Smart Meal Planner, built with:
 - React + TypeScript + Vite
 - Tailwind CSS
-- Supabase (Auth Magic Link + Postgres + RLS)
+- Supabase Auth + Postgres + RLS
 - TanStack Query (React Query)
 - React Hook Form + Zod
-- HashRouter (GitHub Pages friendly)
+- HashRouter for GitHub Pages
 
-## 0) Prerequisites
-- Node.js 18+ (recommended 20+)
-- A Supabase project (free tier is fine)
+## Current backend
 
-## 1) Setup Supabase
-1. Create a new Supabase project.
-2. In Supabase SQL Editor, run:
-   - `supabase/schema.sql`
-3. Deploy the Edge Function (for email invite):
-   - `supabase/functions/invite-member/index.ts`
-   - Then set environment variables for the function (see below).
+SMP2 uses the dedicated Supabase project:
 
-### Required secrets / env
-In Supabase project settings:
-- **Project URL**
-- **Anon public key**
+- Project ref: `roaqvlxnzlzvhksxtqip`
+- Project URL: `https://roaqvlxnzlzvhksxtqip.supabase.co`
+- Client auth uses the project publishable key only. Never put a secret/service-role key in frontend code.
 
-For the Edge Function:
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+The database contains household-scoped tables for recipes, meal planning, inventory and shopping. RLS is enabled on all public app tables.
 
-> The service role key must NEVER be used in the frontend. Only in the Edge Function.
+## Authentication and redirects
 
-## 2) Configure app env
-Copy `.env.example` to `.env` and fill:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_INVITE_FUNCTION_URL` (Edge Function URL, optional but recommended)
+Production app URL:
 
-## 3) Run locally
+`https://shurexbrt.github.io/SMP2/`
+
+The app uses `HashRouter`, and signup confirmation redirects to:
+
+`https://shurexbrt.github.io/SMP2/#/auth/callback`
+
+In **Supabase → Authentication → URL Configuration** set:
+
+- **Site URL:** `https://shurexbrt.github.io/SMP2/`
+- **Redirect URLs:** add `https://shurexbrt.github.io/SMP2/#/auth/callback`
+
+For local development you may additionally allow `http://localhost:5173/**`.
+
+## Household onboarding
+
+After authentication:
+
+1. A user without a household lands on `/account`.
+2. Household creation goes through the `create_household` database function so household + owner membership are created atomically.
+3. Owner invites are stored in `household_members` by email.
+4. If the invited Auth user already exists, the membership is linked immediately by a database trigger.
+5. If the Auth user is created later, an `auth.users` trigger links the pending invite automatically.
+
+## Environment
+
+Copy `.env.example` to `.env` for local development.
+
+Required frontend values:
+
+```bash
+VITE_SUPABASE_URL="https://roaqvlxnzlzvhksxtqip.supabase.co"
+VITE_SUPABASE_ANON_KEY="<publishable key>"
+```
+
+`VITE_INVITE_FUNCTION_URL` is optional and currently unused by the MVP invite flow.
+
+## Run locally
+
 ```bash
 npm install
 npm run dev
 ```
 
-## 4) Build
+## Validation
+
 ```bash
+npm run lint
 npm run build
-npm run preview
 ```
 
-## 5) Deploy to GitHub Pages
-This project uses HashRouter, so it plays nicely with GitHub Pages.
+## Deploy
 
-Typical flow:
-1. Build: `npm run build`
-2. Deploy `dist/` (use any GH Pages deploy method)
+Pushes to `main` deploy through GitHub Actions to GitHub Pages. The Pages build is wired to the new SMP2 Supabase project.
 
-## App flow (high level)
-- Auth: Magic link (email OTP)
-- Household: one household shared by partners (recipes/plan/inventory/shopping shared)
-- Invite: the household owner can invite by email (Edge Function sends invite + creates membership record)
-- Sync: everything is scoped by `household_id`
+## Scope notes
 
-## Notes
-- Nutrition is placeholder for later (v2 scope).
-- Recipe images not included in MVP (text only).
+- Nutrition remains later/placeholder scope.
+- Recipe images are not part of the current MVP unless separately ticketed.

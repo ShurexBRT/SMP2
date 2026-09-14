@@ -6,35 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
 async function createHousehold(name: string) {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user?.id || !u.user?.email) throw new Error("No user session");
+  const householdName = name.trim();
+  if (!householdName) throw new Error("Naziv household-a je obavezan");
 
-  // Create household
-  const { data: hh, error: herr } = await supabase
-    .from("households")
-    .insert({ name, created_by: u.user.id })
-    .select()
-    .single();
-  if (herr) throw herr;
-
-  // Create owner membership
-  const { error: merr } = await supabase.from("household_members").insert({
-    household_id: hh.id,
-    user_id: u.user.id,
-    email: u.user.email,
-    role: "owner",
-    status: "active",
+  const { data, error } = await (supabase as any).rpc("create_household", {
+    household_name: householdName,
   });
-  if (merr) throw merr;
 
-  return hh.id as string;
+  if (error) throw error;
+  return data as string;
 }
 
 async function inviteMember(householdId: string, email: string) {
   const normalized = email.trim().toLowerCase();
   if (!normalized) throw new Error("Email je obavezan");
 
-  // Invite row (no email sending). Invited user is linked on first login/signup (HouseholdProvider).
   const { error } = await supabase.from("household_members").insert({
     household_id: householdId,
     user_id: null,
@@ -59,7 +45,7 @@ export function AccountPage() {
     setMsg(null);
     setErr(null);
     try {
-      await createHousehold(householdName.trim());
+      await createHousehold(householdName);
       await refetch();
       setMsg("Household kreiran. Sad možeš da pozoveš novog korisnika.");
     } catch (e: any) {
@@ -75,8 +61,9 @@ export function AccountPage() {
     setMsg(null);
     setErr(null);
     try {
-      await inviteMember(householdId, inviteEmail.trim());
-      setMsg("Poziv upisan. Neka se korisnik prijavi/registruje sa tim email-om — app ga automatski spaja na household.");
+      await inviteMember(householdId, inviteEmail);
+      await refetch();
+      setMsg("Poziv upisan. Ako nalog već postoji, članstvo se povezuje odmah; u suprotnom se povezuje čim se korisnik registruje.");
       setInviteEmail("");
     } catch (e: any) {
       setErr(e?.message ?? "Greška.");
@@ -101,30 +88,20 @@ export function AccountPage() {
             <div className="text-neutral-500">Učitavanje…</div>
           ) : (
             <>
-              <div>
-                <span className="text-neutral-500">Email:</span> {memberEmail ?? "—"}
-              </div>
-              <div>
-                <span className="text-neutral-500">Uloga:</span> {memberRole ?? "—"}
-              </div>
-              <div>
-                <span className="text-neutral-500">Household:</span> {householdId ?? "nije podešen"}
-              </div>
+              <div><span className="text-neutral-500">Email:</span> {memberEmail ?? "—"}</div>
+              <div><span className="text-neutral-500">Uloga:</span> {memberRole ?? "—"}</div>
+              <div><span className="text-neutral-500">Household:</span> {householdId ?? "nije podešen"}</div>
             </>
           )}
           <div className="pt-2">
-            <Button variant="secondary" onClick={logout}>
-              Odjavi se
-            </Button>
+            <Button variant="secondary" onClick={logout}>Odjavi se</Button>
           </div>
         </CardContent>
       </Card>
 
       {!householdId && (
         <Card>
-          <CardHeader>
-            <CardTitle>Setup household</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Setup household</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-neutral-600">Da bi sync radio između vas, napravimo jedan household koji delite.</div>
             <div>
@@ -142,13 +119,10 @@ export function AccountPage() {
 
       {householdId && memberRole === "owner" && (
         <Card>
-          <CardHeader>
-            <CardTitle>Pozovi novog korisnika u household</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Pozovi novog korisnika u household</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-neutral-600">
-              Unesi email osobe koju želiš u household. Kad se ta osoba uloguje (login ili signup) sa tim email-om,
-              automatski postaje član.
+              Unesi email osobe koju želiš u household. Ako nalog već postoji, povezivanje se radi odmah; ako ne postoji, povezivanje se završava pri registraciji.
             </div>
             <div>
               <label className="mb-1 block text-sm text-neutral-600">Email</label>
@@ -160,16 +134,11 @@ export function AccountPage() {
               />
             </div>
 
-            <div className="text-xs text-neutral-500">
-              Napomena: ovo je “invite without email”. Ako hoćeš i fizičko slanje email poziva,
-              ubacujemo kasnije Edge Function + email provider.
-            </div>
-
             {err && <div className="text-sm text-red-600">{err}</div>}
             {msg && <div className="text-sm text-emerald-700">{msg}</div>}
 
             <Button onClick={onInvite} disabled={busy || !inviteEmail.trim()}>
-              {busy ? "Šaljem…" : "Pošalji poziv"}
+              {busy ? "Upisujem…" : "Dodaj člana"}
             </Button>
           </CardContent>
         </Card>
