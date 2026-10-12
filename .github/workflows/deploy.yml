@@ -28,9 +28,10 @@ jobs:
 
       - name: Build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_INVITE_FUNCTION_URL: ${{ secrets.VITE_INVITE_FUNCTION_URL }}
+          # Publishable client credentials are safe to ship in the frontend bundle.
+          VITE_SUPABASE_URL: https://roaqvlxnzlzvhksxtqip.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_qt6cf5yhw9zfjtxrLue-CQ_HiWgW4HT
+          VITE_INVITE_FUNCTION_URL: ""
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3

@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
+function authCallbackUrl() {
+  const base = window.location.href.split("#")[0];
+  return `${base}#/auth/callback`;
+}
+
 export function SignupPage() {
   const nav = useNavigate();
 
@@ -21,7 +26,7 @@ export function SignupPage() {
     setError(null);
     setInfo(null);
 
-    const eTrim = email.trim();
+    const eTrim = email.trim().toLowerCase();
 
     if (password.length < 8) {
       setError("Lozinka mora imati bar 8 karaktera.");
@@ -38,17 +43,14 @@ export function SignupPage() {
         email: eTrim,
         password,
         options: {
-          // za GH Pages + HashRouter, nek stoji i ovo (koristi se ako je Confirm email ON)
-          emailRedirectTo: `${window.location.origin}${window.location.pathname}#/login`,
+          emailRedirectTo: authCallbackUrl(),
         },
       });
 
       if (error) throw error;
 
-      // Ako je email confirmation ON, user obično nema session odmah.
-      // Ako je OFF, session postoji i možemo da ga pošaljemo na account/onboarding.
       if (!data.session) {
-        setInfo("Nalog je napravljen. Proveri email i potvrdi nalog, pa se uloguj.");
+        setInfo("Nalog je napravljen. Proveri email i potvrdi nalog; posle potvrde vraćamo te direktno u Smart Meal Planner.");
         return;
       }
 
@@ -66,9 +68,7 @@ export function SignupPage() {
         <div className="mb-6 text-center">
           <div className="text-sm text-neutral-500">Smart Meal Planner</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Registracija</h1>
-          <p className="mt-2 text-sm text-neutral-600">
-            Napravi nalog mailom i lozinkom.
-          </p>
+          <p className="mt-2 text-sm text-neutral-600">Napravi nalog mailom i lozinkom.</p>
         </div>
 
         <Card>
