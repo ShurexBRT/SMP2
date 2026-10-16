@@ -44,7 +44,7 @@ After authentication:
 2. Household creation goes through the `create_household` database function so household + owner membership are created atomically.
 3. Owner invites are stored in `household_members` by email.
 4. The client first reads an active membership by user ID. For a legacy pending invitation it verifies the signed-in user with Auth, requires a confirmed matching email, and attempts to claim only that unlinked invitation under RLS.
-5. Production triggers, `create_household`, and claim policies require live verification. Their complete definitions are not reproduced by the checked-in schema. This UI does not send invitation emails.
+5. Production triggers, `create_household`, and claim policies require live verification. Their complete definitions are not reproduced by the checked-in schema. The invitation-email draft invokes `invite-member`; deployment and mail configuration gates are in `supabase/functions/README.md`.
 
 ## Environment
 
@@ -57,7 +57,7 @@ VITE_SUPABASE_URL="https://roaqvlxnzlzvhksxtqip.supabase.co"
 VITE_SUPABASE_ANON_KEY="<publishable key>"
 ```
 
-`VITE_INVITE_FUNCTION_URL` is optional and currently unused by the MVP invite flow.
+`VITE_INVITE_FUNCTION_URL` is a legacy unused value. The invitation-email draft uses the standard `invite-member` Edge Function name.
 
 ## Run locally
 
