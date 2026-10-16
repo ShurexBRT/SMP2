@@ -1,135 +1,123 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-
-function authCallbackUrl() {
-  const base = window.location.href.split("#")[0];
-  return `${base}#/auth/callback`;
-}
+import { useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MailCheck } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { Button } from '@/components/ui/Button';
+import { ErrorNotice } from '@/components/ui/Feedback';
+import { AuthFrame } from '@/components/layout/AuthFrame';
 
 export function SignupPage() {
   const nav = useNavigate();
-
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [confirm, setConfirm] = React.useState("");
-
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [info, setInfo] = React.useState<string | null>(null);
-
-  async function onSubmit(e: React.FormEvent) {
+  const [email, setEmail] = useState(''),
+    [password, setPassword] = useState(''),
+    [confirmation, setConfirmation] = useState('');
+  const [busy, setBusy] = useState(false),
+    [sent, setSent] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  async function submit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setInfo(null);
-
-    const eTrim = email.trim().toLowerCase();
-
     if (password.length < 8) {
-      setError("Lozinka mora imati bar 8 karaktera.");
+      setError(new Error('Lozinka mora imati najmanje 8 znakova.'));
       return;
     }
-    if (password !== confirm) {
-      setError("Lozinke se ne poklapaju.");
+    if (password !== confirmation) {
+      setError(new Error('Lozinke se ne poklapaju.'));
       return;
     }
-
-    setLoading(true);
+    setBusy(true);
     try {
+      const base = window.location.href.split('#')[0];
       const { data, error } = await supabase.auth.signUp({
-        email: eTrim,
+        email: email.trim().toLowerCase(),
         password,
-        options: {
-          emailRedirectTo: authCallbackUrl(),
-        },
+        options: { emailRedirectTo: `${base}#/auth/callback` },
       });
-
       if (error) throw error;
-
-      if (!data.session) {
-        setInfo("Nalog je napravljen. Proveri email i potvrdi nalog; posle potvrde vraćamo te direktno u Smart Meal Planner.");
-        return;
+      if (data.session) nav('/account', { replace: true });
+      else {
+        setSent(true);
+        setPassword('');
+        setConfirmation('');
       }
-
-      nav("/account", { replace: true });
-    } catch (err: any) {
-      setError(err?.message ?? "Nešto je puklo pri registraciji.");
+    } catch (err) {
+      setError(err);
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
-
   return (
-    <div className="min-h-screen bg-neutral-50 px-4 py-10">
-      <div className="mx-auto max-w-md">
-        <div className="mb-6 text-center">
-          <div className="text-sm text-neutral-500">Smart Meal Planner</div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Registracija</h1>
-          <p className="mt-2 text-sm text-neutral-600">Napravi nalog mailom i lozinkom.</p>
+    <AuthFrame
+      title={sent ? 'Proverite svoj email' : 'Manje brige oko obroka'}
+      subtitle={
+        sent
+          ? 'Ako je potrebna potvrda, poslaćemo vam link za nastavak.'
+          : 'Napravite nalog i organizujte zajedničku kuhinju.'
+      }
+      footer={
+        <>
+          Već imate nalog?{' '}
+          <Link className="text-link" to="/login">
+            Prijavite se
+          </Link>
+        </>
+      }
+    >
+      {sent ? (
+        <div className="form-stack text-center">
+          <MailCheck size={32} className="brand-icon mx-auto" />
+          <p>
+            Proverite prijemno sanduče i spam folder za <strong>{email}</strong>. Otvorite link u
+            ovom browseru da završite potvrdu.
+          </p>
+          <Link className="button button-secondary" to="/login">
+            Nazad na prijavu
+          </Link>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Napravi nalog</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-3">
-              <div>
-                <label className="mb-1 block text-sm text-neutral-600">Email</label>
-                <Input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="npr. sandra@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm text-neutral-600">Lozinka</label>
-                <Input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="min 8 karaktera"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm text-neutral-600">Potvrdi lozinku</label>
-                <Input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="ponovi lozinku"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                />
-              </div>
-
-              {error && <div className="text-sm text-red-600">{error}</div>}
-              {info && <div className="text-sm text-green-700">{info}</div>}
-
-              <Button type="submit" disabled={loading || !email || !password || !confirm}>
-                {loading ? "Pravim nalog…" : "Napravi nalog"}
-              </Button>
-
-              <div className="text-xs text-neutral-500">
-                Već imaš nalog?{" "}
-                <Link className="underline" to="/login">
-                  Uloguj se
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      ) : (
+        <form className="form-stack" onSubmit={submit}>
+          <label htmlFor="signup-email">
+            Email adresa
+            <Input
+              id="signup-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ime@primer.rs"
+            />
+          </label>
+          <label htmlFor="signup-password">
+            Lozinka
+            <PasswordInput
+              id="signup-password"
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Najmanje 8 znakova"
+            />
+          </label>
+          <label htmlFor="signup-confirm">
+            Potvrdi lozinku
+            <PasswordInput
+              id="signup-confirm"
+              required
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              placeholder="Ponovite lozinku"
+            />
+          </label>
+          <ErrorNotice error={error} />
+          <Button type="submit" disabled={busy || !email.trim() || !password || !confirmation}>
+            {busy ? 'Pravim nalog…' : 'Napravi nalog'}
+          </Button>
+        </form>
+      )}
+    </AuthFrame>
   );
 }

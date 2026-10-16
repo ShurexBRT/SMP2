@@ -1,59 +1,85 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { CalendarDays, CookingPot, ShoppingBasket, Refrigerator, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import {
+  CalendarDays,
+  BookOpen,
+  ShoppingBasket,
+  Refrigerator,
+  UserRound,
+  CookingPot,
+} from 'lucide-react';
+import { useHousehold } from '@/app/HouseholdProvider';
+import { ErrorNotice, Loading } from '@/components/ui/Feedback';
 
-const navItems = [
-  { to: "/plan", label: "Plan", icon: CalendarDays },
-  { to: "/recipes", label: "Recepti", icon: CookingPot },
-  { to: "/shopping", label: "Kupovina", icon: ShoppingBasket },
-  { to: "/inventory", label: "Frižider", icon: Refrigerator },
+const items = [
+  { to: '/plan', label: 'Plan', icon: CalendarDays },
+  { to: '/recipes', label: 'Recepti', icon: BookOpen },
+  { to: '/shopping', label: 'Kupovina', icon: ShoppingBasket },
+  { to: '/inventory', label: 'Frižider', icon: Refrigerator },
 ];
+const titles: Record<string, string> = {
+  plan: 'Planer obroka',
+  recipes: 'Knjiga recepata',
+  shopping: 'Lista za kupovinu',
+  inventory: 'Frižider i zalihe',
+  account: 'Nalog i domaćinstvo',
+};
 
 export function AppShell() {
+  const { pathname } = useLocation();
+  const { loading, error, refetch } = useHousehold();
+  const title = titles[pathname.split('/')[1]] ?? 'Smart Meal Planner';
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="mx-auto max-w-5xl px-4 pb-24 pt-6">
-        <header className="mb-5 flex items-center justify-between">
-          <div>
-            <div className="text-sm text-neutral-500">Smart Meal Planner</div>
-            <h1 className="text-xl font-semibold tracking-tight">Tvoj plan. Tvoja lista. Gotovo.</h1>
-          </div>
-          <NavLink
-            to="/account"
-            className={({ isActive }) =>
-              cn(
-                "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm",
-                isActive && "ring-2 ring-neutral-200"
-              )
-            }
-            aria-label="Nalog"
-          >
-            <User size={18} />
-          </NavLink>
-        </header>
-
-        <Outlet />
-      </div>
-
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-neutral-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-around px-4 py-2">
-          {navItems.map((it) => (
-            <NavLink
-              key={it.to}
-              to={it.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex w-full flex-col items-center gap-1 rounded-2xl px-2 py-2 text-xs text-neutral-500",
-                  isActive && "text-neutral-900"
-                )
-              }
-            >
-              <it.icon size={18} />
-              {it.label}
-            </NavLink>
-          ))}
+    <>
+      <a
+        href="#main"
+        className="skip-link"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+      >
+        Preskoči na sadržaj
+      </a>
+      <header className="app-header">
+        <div className="header-inner">
+          <Link to="/plan" className="brand" aria-label="Smart Meal Planner – Plan">
+            <CookingPot className="brand-icon" size={29} />
+            <span>
+              <small>Smart Meal Planner</small>
+              <strong>{title}</strong>
+            </span>
+          </Link>
+          <nav className="desktop-nav" aria-label="Glavna navigacija">
+            {items.map(({ icon: Icon, ...item }) => (
+              <NavLink key={item.to} className="nav-link" to={item.to}>
+                <Icon size={18} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <Link to="/account" className="account-link" aria-label="Nalog i podešavanja">
+            <UserRound size={19} />
+          </Link>
         </div>
+      </header>
+      <main id="main" className="app-main" tabIndex={-1}>
+        {loading ? (
+          <Loading label="Učitavam domaćinstvo…" />
+        ) : error ? (
+          <ErrorNotice error={error} retry={() => void refetch()} />
+        ) : (
+          <Outlet />
+        )}
+      </main>
+      <footer className="app-footer">Saki &amp; Peki · Smart Meal Planner</footer>
+      <nav className="mobile-nav" aria-label="Mobilna navigacija">
+        {items.map(({ icon: Icon, ...item }) => (
+          <NavLink key={item.to} className="nav-link" to={item.to}>
+            <Icon size={21} />
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
-    </div>
+    </>
   );
 }

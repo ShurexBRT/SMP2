@@ -1,130 +1,143 @@
-import React from "react";
-import { supabase } from "@/lib/supabase";
+import React from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from './AuthProvider';
+import type { HouseholdRole } from '@/lib/types';
+import { mayClaimInvitation } from '@/features/household/invitation';
 
-type HouseholdState = {
+type Membership = {
   householdId: string | null;
-  memberRole: "owner" | "member" | null;
+  memberRole: HouseholdRole | null;
   memberEmail: string | null;
+};
+type HouseholdState = Membership & {
   loading: boolean;
+  error: unknown;
   refetch: () => Promise<void>;
 };
-
+const empty: Membership = { householdId: null, memberRole: null, memberEmail: null };
 const HouseholdContext = React.createContext<HouseholdState>({
-  householdId: null,
-  memberRole: null,
-  memberEmail: null,
+  ...empty,
   loading: true,
+  error: null,
   refetch: async () => {},
 });
 
-async function fetchMyMembership() {
-  const { data: userRes, error: uerr } = await supabase.auth.getUser();
-  if (uerr) throw uerr;
-
-  const user = userRes.user;
-  if (!user?.id || !user?.email) return { householdId: null, memberRole: null, memberEmail: null };
-
-  // 1) Prefer lookup by user_id (already linked)
-  const byUser = await supabase
-    .from("household_members")
-    .select("id, household_id, role, status, email, user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (byUser.error) throw byUser.error;
-
-  if (byUser.data) {
-    // keep email in sync (best-effort)
-    if (byUser.data.email !== user.email) {
-      await supabase.from("household_members").update({ email: user.email }).eq("id", byUser.data.id);
-    }
-
-    if (byUser.data.status !== "active") {
-      return { householdId: null, memberRole: null, memberEmail: user.email };
-    }
-
+async function fetchMembership(userId: string, email: string | undefined): Promise<Membership> {
+  // Prefer linked membership; never infer authorization from email alone.
+  const { data, error } = await supabase
+    .from('household_members')
+    .select('household_id, role, status')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(2);
+  if (error) throw error;
+  if ((data?.length ?? 0) > 1)
+    throw new Error(
+      'Nalog pripada više domaćinstava. Potrebno je proveriti članstvo pre nastavka.'
+    );
+  const member = data?.[0];
+  if (member)
     return {
-      householdId: byUser.data.household_id as string,
-      memberRole: byUser.data.role as any,
-      memberEmail: user.email,
+      householdId: member.household_id,
+      memberRole: member.role,
+      memberEmail: email ?? null,
     };
+  // Compatibility for the existing email-invite flow. Verify identity on the server,
+  // then claim only an unlinked invitation for that confirmed email, subject to RLS.
+  const verified = await supabase.auth.getUser();
+  if (verified.error) throw verified.error;
+  const user = verified.data.user;
+  if (!user || user.id !== userId) throw new Error('Prijava je promenjena. Osveži stranicu.');
+  if (!user.email || !user.email_confirmed_at) return { ...empty, memberEmail: user.email ?? null };
+  const invitations = await supabase
+    .from('household_members')
+    .select('id, household_id, email, role, status, user_id')
+    .eq('email', user.email.toLowerCase())
+    .eq('status', 'invited')
+    .is('user_id', null)
+    .limit(2);
+  if (invitations.error) throw invitations.error;
+  if ((invitations.data?.length ?? 0) > 1)
+    throw new Error('Postoji više pozivnica. Potrebno je proveriti članstvo pre nastavka.');
+  const invite = invitations.data?.[0];
+  if (!invite || !mayClaimInvitation(invite, user)) return { ...empty, memberEmail: user.email };
+  const linked = await supabase
+    .from('household_members')
+    .update({ user_id: user.id, status: 'active' })
+    .eq('id', invite.id)
+    .eq('household_id', invite.household_id)
+    .eq('email', invite.email)
+    .eq('status', 'invited')
+    .is('user_id', null)
+    .select('household_id, role')
+    .single();
+  if (linked.error) {
+    // Another tab or StrictMode replay may already have claimed this invitation.
+    // Re-read the verified user's membership rather than treating zero updates as failure.
+    const active = await supabase
+      .from('household_members')
+      .select('household_id, role')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .limit(2);
+    if (
+      !active.error &&
+      active.data?.length === 1 &&
+      active.data[0].household_id === invite.household_id
+    ) {
+      return {
+        householdId: active.data[0].household_id,
+        memberRole: active.data[0].role,
+        memberEmail: user.email,
+      };
+    }
+    throw new Error(
+      'Pozivnica postoji, ali povezivanje naloga nije uspelo. Potrebno je proveriti dozvole članstva u bazi.'
+    );
   }
-
-  // 2) Fallback lookup by email (invite flow: status=invited, user_id is NULL)
-  const byEmail = await supabase
-    .from("household_members")
-    .select("id, household_id, role, status, email, user_id")
-    .eq("email", user.email)
-    .maybeSingle();
-
-  if (byEmail.error) throw byEmail.error;
-  if (!byEmail.data) return { householdId: null, memberRole: null, memberEmail: user.email };
-
-  // If invited (or missing user_id), auto-activate & link to current auth user.
-  if (byEmail.data.status === "invited" || !byEmail.data.user_id) {
-    const { data: updated, error: updErr } = await supabase
-      .from("household_members")
-      .update({ status: "active", user_id: user.id })
-      .eq("id", byEmail.data.id)
-      .select("household_id, role, status")
-      .single();
-
-    if (updErr) throw updErr;
-
-    if (updated.status !== "active") return { householdId: null, memberRole: null, memberEmail: user.email };
-
-    return {
-      householdId: updated.household_id as string,
-      memberRole: updated.role as any,
-      memberEmail: user.email,
-    };
-  }
-
-  // Active already
-  if (byEmail.data.status !== "active") return { householdId: null, memberRole: null, memberEmail: user.email };
-
   return {
-    householdId: byEmail.data.household_id as string,
-    memberRole: byEmail.data.role as any,
+    householdId: linked.data.household_id,
+    memberRole: linked.data.role,
     memberEmail: user.email,
   };
 }
 
 export function HouseholdProvider({ children }: { children: React.ReactNode }) {
-  const [householdId, setHouseholdId] = React.useState<string | null>(null);
-  const [memberRole, setMemberRole] = React.useState<"owner" | "member" | null>(null);
-  const [memberEmail, setMemberEmail] = React.useState<string | null>(null);
+  const { session } = useAuth();
+  const [membership, setMembership] = React.useState<Membership>(empty);
   const [loading, setLoading] = React.useState(true);
-
+  const [error, setError] = React.useState<unknown>(null);
+  const request = React.useRef(0);
+  const userId = session?.user.id;
+  const email = session?.user.email;
   const refetch = React.useCallback(async () => {
+    const sequence = ++request.current;
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetchMyMembership();
-      setHouseholdId(res.householdId);
-      setMemberRole(res.memberRole);
-      setMemberEmail(res.memberEmail);
+      const result = userId ? await fetchMembership(userId, email) : empty;
+      if (sequence === request.current) setMembership(result);
+    } catch (err) {
+      if (sequence === request.current) {
+        setMembership(empty);
+        setError(err);
+      }
     } finally {
-      setLoading(false);
+      if (sequence === request.current) setLoading(false);
     }
-  }, []);
-
+  }, [userId, email]);
   React.useEffect(() => {
-    refetch();
-
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      refetch();
-    });
-
-    return () => sub.subscription.unsubscribe();
+    void refetch();
+    return () => {
+      request.current++;
+    };
   }, [refetch]);
-
   return (
-    <HouseholdContext.Provider value={{ householdId, memberRole, memberEmail, loading, refetch }}>
+    <HouseholdContext.Provider value={{ ...membership, loading, error, refetch }}>
       {children}
     </HouseholdContext.Provider>
   );
 }
-
 export function useHousehold() {
   return React.useContext(HouseholdContext);
 }

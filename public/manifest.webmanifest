@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "Smart Meal Planner",
+  "short_name": "Meal Planner",
+  "description": "Zajednički plan obroka, recepti, zalihe i lista za kupovinu.",
+  "lang": "sr-Latn",
+  "start_url": "./#/plan",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#45634a",
+  "icons": [
+    {
+      "src": "icons/meal-planner-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/meal-planner-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/meal-planner-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

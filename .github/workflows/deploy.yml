@@ -2,15 +2,15 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
+  pull_request:
+    branches: ['main']
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages-${{ github.ref }}'
   cancel-in-progress: true
 
 jobs:
@@ -26,21 +26,29 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run lint
+      - run: npm test
+
       - name: Build
         env:
           # Publishable client credentials are safe to ship in the frontend bundle.
           VITE_SUPABASE_URL: https://roaqvlxnzlzvhksxtqip.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_qt6cf5yhw9zfjtxrLue-CQ_HiWgW4HT
-          VITE_INVITE_FUNCTION_URL: ""
+          VITE_INVITE_FUNCTION_URL: ''
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push'
         with:
           path: dist
 
   deploy:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

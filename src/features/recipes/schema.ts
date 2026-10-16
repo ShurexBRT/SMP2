@@ -1,14 +1,26 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const MealTag = z.enum(["breakfast", "lunch", "dinner"]);
+const MealTag = z.enum(['breakfast', 'lunch', 'dinner']);
 
 export const RecipeSchema = z.object({
-  name: z.string().min(1, "Naziv je obavezan"),
-  steps: z.array(z.string().min(1)).min(1, "Unesi bar 1 korak"),
+  name: z.string().trim().min(1, 'Naziv je obavezan').max(120, 'Naziv je predugačak'),
+  steps: z.array(z.string().min(1)).min(1, 'Unesi bar 1 korak'),
   tags: z.array(z.string()).default([]),
 
-  prep_minutes: z.number().nullable().default(null),
-  cook_minutes: z.number().nullable().default(null),
+  prep_minutes: z
+    .number()
+    .finite()
+    .int()
+    .min(0, 'Vreme pripreme ne može biti negativno')
+    .nullable()
+    .default(null),
+  cook_minutes: z
+    .number()
+    .finite()
+    .int()
+    .min(0, 'Vreme kuvanja ne može biti negativno')
+    .nullable()
+    .default(null),
   default_servings: z.number().int().min(1).default(2),
   notes: z.string().nullable().default(null),
 
