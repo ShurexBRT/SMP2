@@ -10,6 +10,7 @@ import { normalizeName } from '@/lib/utils';
 import { allRows } from '@/lib/paginate';
 import { Input } from '@/components/ui/Input';
 import { EmptyState, ErrorNotice, HouseholdGate, Loading } from '@/components/ui/Feedback';
+import { StarterRecipesCard } from '@/features/recipes/StarterRecipesCard';
 
 export function RecipesPage() {
   const { householdId, ready } = useRequireHousehold();
@@ -72,6 +73,7 @@ export function RecipesPage() {
         </Link>
       </div>
       <div className="page-stack">
+        <StarterRecipesCard key={householdId} householdId={householdId!} />
         <div className="search-field">
           <Search size={19} />
           <Input

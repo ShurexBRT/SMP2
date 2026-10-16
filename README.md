@@ -112,3 +112,17 @@ adb -s emulator-5554 reverse tcp:54399 tcp:54399
 Use the current device serial shown by `adb devices -l`. A plain HTTP LAN IP or `10.0.2.2` URL is not equivalent to localhost for PWA secure-context checks. Chrome's Account install action or browser menu opens the native install dialog. Browser/OS support controls whether the result is a WebAPK or a launcher shortcut; this repo does not create an Android APK itself.
 
 The public GitHub Pages app continues to show the previous version until an explicitly authorized release. Local installation does not deploy the redesign.
+
+# Početni recepti
+
+Na ekranu **Recepti** izaberi **Dodaj početne recepte** za kolekciju od 24 jela:
+kajgana, proja, domaća jela i nekoliko posebnih obroka. Svi imaju porcije,
+sastojke sa količinama, vreme i korake pripreme. Voda za kuvanje je navedena u
+koracima, pa se ne dodaje na kupovinu.
+
+Dodavanje koristi prijavu i aktivno domaćinstvo korisnika, uz postojeći RLS.
+Nema administrativnih ključeva ili promena šeme. Postojeći recept istog naziva
+se preskače; završeni početni recepti se ne prepisuju. Uvoz se sastoji od više
+zahteva: posle prekida ostaje jasno označen nepotpun recept, a ponovni dodir
+nastavlja uvoz bez dupliranja. Kolekcija nije automatski upisana u produkciona
+domaćinstva samim objavljivanjem aplikacije.
