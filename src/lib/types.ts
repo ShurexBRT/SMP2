@@ -2,13 +2,13 @@
 
 export type UUID = string;
 
-export type HouseholdRole = "owner" | "member";
-export type MemberStatus = "invited" | "active";
+export type HouseholdRole = 'owner' | 'member';
+export type MemberStatus = 'invited' | 'active';
 
-export type MealType = "breakfast" | "lunch" | "dinner";
+export type MealType = 'breakfast' | 'lunch' | 'dinner';
 
-export type ShoppingStatus = "open" | "archived";
-export type ShoppingSource = "plan" | "manual";
+export type ShoppingStatus = 'open' | 'archived';
+export type ShoppingSource = 'plan' | 'manual';
 
 export type Table<Row, Insert, Update> = {
   Row: Row;
@@ -279,9 +279,11 @@ export interface Database {
       >;
     };
 
-    Views: {};
-    Functions: {};
-    Enums: {};
-    CompositeTypes: {};
+    Views: Record<never, never>;
+    Functions: {
+      create_household: { Args: { household_name: string }; Returns: string };
+    };
+    Enums: Record<never, never>;
+    CompositeTypes: Record<never, never>;
   };
 }

@@ -1,126 +1,163 @@
-import { supabase } from "@/lib/supabase";
-import { getOrCreateShoppingList, clearPlanItemsFromList } from "@/features/shopping/api";
-import { getOrCreateMealPlan, listMealPlanItems } from "@/features/plan/api";
-import { listRecipeIngredients } from "@/features/recipes/ingredientsApi";
-import { getRecipe } from "@/features/recipes/api";
+import { supabase } from '@/lib/supabase';
+import { getOrCreateShoppingList, listShoppingItems } from './api';
+import { listInventory } from '@/features/inventory/api';
+import { reconcileShopping, type Demand } from './calculate';
+import { todayISO } from '@/lib/utils';
+import type { Row } from '@/lib/data';
+import { allRows } from '@/lib/paginate';
 
-export async function generateShoppingFromWeek(params: {
+export async function generateShoppingFromWeek({
+  householdId,
+  weekStart,
+  purchasedInInventoryIds = [],
+}: {
   householdId: string;
-  weekStart: string; // YYYY-MM-DD
-  overwrite: boolean; // delete existing plan items in list then insert
-}): Promise<{ shoppingListId: string; inserted: number }> {
-  const { householdId, weekStart, overwrite } = params;
-
-  // ensure meal_plan exists
-  const plan = await getOrCreateMealPlan({ householdId, weekStart });
-  const items = await listMealPlanItems({ householdId, mealPlanId: plan.id });
-
+  weekStart: string;
+  purchasedInInventoryIds?: string[];
+}) {
+  // Read every input before writing. Merely viewing a week never creates a plan.
+  const { data: plan, error: planError } = await supabase
+    .from('meal_plans')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('week_start', weekStart)
+    .maybeSingle();
+  if (planError) throw planError;
+  const items = plan
+    ? await allRows((from, to) =>
+        supabase
+          .from('meal_plan_items')
+          .select('*')
+          .eq('household_id', householdId)
+          .eq('meal_plan_id', plan.id)
+          .order('id')
+          .range(from, to)
+      )
+    : ([] as Row<'meal_plan_items'>[]);
+  const recipeIds = [...new Set(items.map((x) => x.recipe_id))];
+  const [recipeRows, ingredientRows, inventory] = await Promise.all([
+    recipeIds.length
+      ? allRows((from, to) =>
+          supabase
+            .from('recipes')
+            .select('*')
+            .eq('household_id', householdId)
+            .in('id', recipeIds)
+            .order('id')
+            .range(from, to)
+        )
+      : Promise.resolve([] as Row<'recipes'>[]),
+    recipeIds.length
+      ? allRows((from, to) =>
+          supabase
+            .from('recipe_ingredients')
+            .select('*')
+            .eq('household_id', householdId)
+            .in('recipe_id', recipeIds)
+            .order('id')
+            .range(from, to)
+        )
+      : Promise.resolve([] as Row<'recipe_ingredients'>[]),
+    listInventory(householdId),
+  ]);
+  const recipes = new Map(recipeRows.map((r) => [r.id, r]));
+  const ingredientIds = [...new Set(ingredientRows.map((x) => x.ingredient_id))];
+  const catalogue: Row<'ingredients'>[] = [];
+  for (let offset = 0; offset < ingredientIds.length; offset += 100) {
+    const batch = ingredientIds.slice(offset, offset + 100);
+    catalogue.push(
+      ...(await allRows((from, to) =>
+        supabase
+          .from('ingredients')
+          .select('*')
+          .eq('household_id', householdId)
+          .in('id', batch)
+          .order('id')
+          .range(from, to)
+      ))
+    );
+  }
+  const names = new Map(catalogue.map((x) => [x.id, x.name]));
+  const demand: Demand[] = [];
+  for (const item of items) {
+    const recipe = recipes.get(item.recipe_id);
+    if (!recipe || recipe.default_servings <= 0)
+      throw new Error('Recept iz plana nije dostupan. Proveri plan pre osvežavanja liste.');
+    const recipeIngredients = ingredientRows.filter((x) => x.recipe_id === recipe.id);
+    if (!recipeIngredients.length)
+      throw new Error(`Recept „${recipe.name}“ nema sastojke. Dopuni ga pre osvežavanja kupovine.`);
+    for (const ingredient of recipeIngredients.filter((x) => !x.optional)) {
+      const label = names.get(ingredient.ingredient_id);
+      if (!label) throw new Error('Naziv sastojka nije dostupan. Osveži recepte i pokušaj ponovo.');
+      demand.push({
+        label,
+        ingredientId: ingredient.ingredient_id,
+        qty: (Number(ingredient.qty) * item.servings) / recipe.default_servings,
+        unit: ingredient.unit,
+        date: item.date,
+      });
+    }
+  }
   const list = await getOrCreateShoppingList({ householdId, weekStart });
-
-  if (overwrite) {
-    await clearPlanItemsFromList({ householdId, shoppingListId: list.id });
-  }
-
-  // Existing items (used for append mode so we don't duplicate rows)
-  const { data: existingItems, error: exErr } = await supabase
-    .from("shopping_list_items")
-    .select("id, label, unit, qty, checked, source")
-    .eq("household_id", householdId)
-    .eq("shopping_list_id", list.id);
-
-  if (exErr) throw exErr;
-
-  const existingMap = new Map<
-    string,
-    { id: string; qty: number | null; unit: string | null; checked: boolean; source: string; label: string }
-  >();
-
-  for (const r of existingItems ?? []) {
-    const label = (r as any).label as string;
-    const unit = ((r as any).unit ?? "").toString() || null;
-    const key = `${label.toLowerCase()}|${unit ?? ""}`;
-    existingMap.set(key, {
-      id: (r as any).id,
-      qty: (r as any).qty ?? null,
-      unit,
-      checked: !!(r as any).checked,
-      source: (r as any).source,
-      label,
-    });
-  }
-
-  // Aggregate needed ingredients from plan
-  const agg = new Map<string, { label: string; unit: string | null; qty: number }>();
-
-  for (const it of items) {
-    const recipe = await getRecipe(householdId, it.recipe_id);
-    const rIngs = await listRecipeIngredients({ householdId, recipeId: recipe.id });
-
-    for (const ri of rIngs) {
-      // qty scaled by servings ratio
-      const ratio = (it.servings ?? 1) / (recipe.default_servings ?? 1);
-      const qty = Number(ri.qty || 0) * ratio;
-
-      const label = ri.ingredient_name;
-      const unit = ri.unit ?? null;
-      const key = `${label.toLowerCase()}|${unit ?? ""}`;
-
-      const prev = agg.get(key);
-      if (!prev) agg.set(key, { label, unit, qty });
-      else agg.set(key, { ...prev, qty: prev.qty + qty });
-    }
-  }
-
-  const payload = Array.from(agg.values()).map((x) => ({
-    household_id: householdId,
-    shopping_list_id: list.id,
-    ingredient_id: null,
-    label: x.label,
-    qty: Number.isFinite(x.qty) ? Math.round(x.qty * 100) / 100 : null,
-    unit: x.unit,
-    category: "General",
-    checked: false,
-    source: "plan" as const,
-  }));
-
-  if (!payload.length) return { shoppingListId: list.id, inserted: 0 };
-
-  // Merge behavior:
-  // - overwrite=true already cleared old plan items, so this becomes mostly inserts.
-  // - overwrite=false merges quantities if an item already exists.
-  const toInsert: typeof payload = [];
-  const toUpdate: { id: string; qty: number | null }[] = [];
-
-  for (const p of payload) {
-    const unit = (p.unit ?? "").toString() || null;
-    const key = `${p.label.toLowerCase()}|${unit ?? ""}`;
-    const ex = existingMap.get(key);
-
-    if (!ex) {
-      toInsert.push(p);
-      continue;
-    }
-
-    const a = typeof ex.qty === "number" && isFinite(ex.qty) ? ex.qty : 0;
-    const b = typeof p.qty === "number" && isFinite(p.qty) ? p.qty : 0;
-    const next = a + b;
-
-    toUpdate.push({ id: ex.id, qty: next });
-  }
-
-  if (toInsert.length) {
-    const { error: insErr } = await supabase.from("shopping_list_items").insert(toInsert);
-    if (insErr) throw insErr;
-  }
-
-  for (const u of toUpdate) {
-    const { error } = await supabase
-      .from("shopping_list_items")
-      .update({ qty: u.qty })
-      .eq("household_id", householdId)
-      .eq("id", u.id);
+  const existing = await listShoppingItems({ householdId, shoppingListId: list.id });
+  const changes = reconcileShopping(
+    demand,
+    inventory.map((x) => ({
+      name: x.ingredients?.name ?? '',
+      qty: Number(x.qty),
+      unit: x.unit,
+      expiresAt: x.expires_at,
+    })),
+    existing,
+    todayISO(),
+    purchasedInInventoryIds
+  );
+  const toPayload = (item: Demand) => ({
+    label: item.label,
+    qty: item.qty,
+    unit: item.unit,
+    ingredient_id: item.ingredientId,
+  });
+  // Non-destructive writes first; stale rows are removed only after those writes succeed.
+  if (changes.inserts.length) {
+    const { error } = await supabase.from('shopping_list_items').insert(
+      changes.inserts.map((item) => ({
+        ...toPayload(item),
+        household_id: householdId,
+        shopping_list_id: list.id,
+        category: 'Ostalo',
+        checked: false,
+        source: 'plan' as const,
+      }))
+    );
     if (error) throw error;
   }
-
-  return { shoppingListId: list.id, inserted: toInsert.length };
+  for (const { id, item } of changes.updates) {
+    const { error } = await supabase
+      .from('shopping_list_items')
+      .update(toPayload(item))
+      .eq('household_id', householdId)
+      .eq('shopping_list_id', list.id)
+      .eq('source', 'plan')
+      .eq('checked', false)
+      .eq('id', id);
+    if (error) throw error;
+  }
+  if (changes.deletes.length) {
+    const { error } = await supabase
+      .from('shopping_list_items')
+      .delete()
+      .eq('household_id', householdId)
+      .eq('shopping_list_id', list.id)
+      .eq('source', 'plan')
+      .eq('checked', false)
+      .in('id', changes.deletes);
+    if (error) throw error;
+  }
+  return {
+    shoppingListId: list.id,
+    inserted: changes.inserts.length,
+    updated: changes.updates.length,
+    removed: changes.deletes.length,
+  };
 }

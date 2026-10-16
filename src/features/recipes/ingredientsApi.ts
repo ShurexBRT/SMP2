@@ -1,25 +1,27 @@
-import { supabase } from "@/lib/supabase";
-import type { Database } from "@/lib/types";
+import { supabase } from '@/lib/supabase';
+import type { Database } from '@/lib/types';
 
-type RecipeIngRow = Database["public"]["Tables"]["recipe_ingredients"]["Row"];
-type RecipeIngInsert = Database["public"]["Tables"]["recipe_ingredients"]["Insert"];
+type RecipeIngRow = Database['public']['Tables']['recipe_ingredients']['Row'];
+type RecipeIngInsert = Database['public']['Tables']['recipe_ingredients']['Insert'];
 
 export async function listRecipeIngredients(params: {
   householdId: string;
   recipeId: string;
 }): Promise<(RecipeIngRow & { ingredient_name: string })[]> {
   const { data, error } = await supabase
-    .from("recipe_ingredients")
-    .select("*, ingredients(name)")
-    .eq("household_id", params.householdId)
-    .eq("recipe_id", params.recipeId)
-    .order("created_at", { ascending: true });
+    .from('recipe_ingredients')
+    .select('*, ingredients(name)')
+    .eq('household_id', params.householdId)
+    .eq('recipe_id', params.recipeId)
+    .order('created_at', { ascending: true });
 
   if (error) throw error;
 
-  return (data ?? []).map((r: any) => ({
+  return (
+    (data ?? []) as unknown as (RecipeIngRow & { ingredients: { name: string } | null })[]
+  ).map((r) => ({
     ...r,
-    ingredient_name: r.ingredients?.name ?? "—",
+    ingredient_name: r.ingredients?.name ?? '—',
   }));
 }
 
@@ -30,7 +32,7 @@ export async function addRecipeIngredient(params: {
   qty: number;
   unit: string;
   optional: boolean;
-}): Promise<void> {
+}): Promise<RecipeIngRow> {
   const row: RecipeIngInsert = {
     household_id: params.householdId,
     recipe_id: params.recipeId,
@@ -40,8 +42,13 @@ export async function addRecipeIngredient(params: {
     optional: params.optional,
   };
 
-  const { error } = await supabase.from("recipe_ingredients").insert(row);
+  const { data, error } = await supabase
+    .from('recipe_ingredients')
+    .insert(row)
+    .select('*')
+    .single();
   if (error) throw error;
+  return data;
 }
 
 export async function updateRecipeIngredient(params: {
@@ -52,15 +59,22 @@ export async function updateRecipeIngredient(params: {
   optional: boolean;
 }): Promise<void> {
   const { error } = await supabase
-    .from("recipe_ingredients")
+    .from('recipe_ingredients')
     .update({ qty: params.qty, unit: params.unit, optional: params.optional })
-    .eq("household_id", params.householdId)
-    .eq("id", params.id);
+    .eq('household_id', params.householdId)
+    .eq('id', params.id);
 
   if (error) throw error;
 }
 
-export async function deleteRecipeIngredient(params: { householdId: string; id: string }): Promise<void> {
-  const { error } = await supabase.from("recipe_ingredients").delete().eq("household_id", params.householdId).eq("id", params.id);
+export async function deleteRecipeIngredient(params: {
+  householdId: string;
+  id: string;
+}): Promise<void> {
+  const { error } = await supabase
+    .from('recipe_ingredients')
+    .delete()
+    .eq('household_id', params.householdId)
+    .eq('id', params.id);
   if (error) throw error;
 }
