@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UsersRound, Plus, Mail, LogOut, Sun, Moon, UserRound } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { sendInvitation } from '@/features/household/sendInvitation';
 import { useHousehold } from '@/app/HouseholdProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -55,31 +56,24 @@ export function AccountPage() {
   }
   async function invite(e: FormEvent) {
     e.preventDefault();
+    await inviteAddress(inviteEmail);
+  }
+  async function inviteAddress(address: string) {
     setBusy(true);
     setError(null);
     setMessage('');
     try {
-      const normalized = inviteEmail.trim().toLowerCase();
-      if (normalized === memberEmail?.toLowerCase())
-        throw new Error('Već ste član ovog domaćinstva.');
-      if (info.data?.members.some((x) => x.email.toLowerCase() === normalized))
-        throw new Error('Ova osoba već ima članstvo ili pozivnicu.');
-      const { error } = await supabase.from('household_members').insert({
-        household_id: householdId!,
-        email: normalized,
-        role: 'member',
-        status: 'invited',
-        user_id: null,
-      });
-      if (error) throw error;
+      if (!householdId || memberRole !== 'owner')
+        throw new Error('Samo vlasnik može da poziva članove.');
+      await sendInvitation(householdId, address);
       setMessage(
-        'Pozivnica je upisana. Osoba treba da se prijavi ili registruje ovom email adresom. Aplikacija ne šalje email pozivnicu.'
+        'Pozivnica je predata servisu za slanje. Ako mejl ne stigne, proverite spam ili pokušajte ponovo.'
       );
       setInviteEmail('');
-      await info.refetch();
     } catch (err) {
       setError(err);
     } finally {
+      await info.refetch();
       setBusy(false);
     }
   }
@@ -211,7 +205,22 @@ export function AccountPage() {
                     <p className="break-all">{member.email}</p>
                     <small className="muted">{member.role === 'owner' ? 'Vlasnik' : 'Član'}</small>
                   </div>
-                  <span className="badge">{member.status === 'active' ? 'Aktivan' : 'Pozvan'}</span>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <span className="badge">
+                      {member.status === 'active' ? 'Aktivan' : 'Pozvan'}
+                    </span>
+                    {memberRole === 'owner' &&
+                      member.status === 'invited' &&
+                      member.role === 'member' && (
+                        <Button
+                          variant="secondary"
+                          disabled={busy}
+                          onClick={() => void inviteAddress(member.email)}
+                        >
+                          Pošalji ponovo
+                        </Button>
+                      )}
+                  </div>
                 </div>
               ))}
               {memberRole === 'owner' && (
@@ -231,11 +240,11 @@ export function AccountPage() {
                     disabled={busy || !inviteEmail.trim() || info.isLoading || !!info.error}
                   >
                     <Mail size={16} />
-                    {busy ? 'Upisujem…' : 'Dodaj člana'}
+                    {busy ? 'Šaljem…' : 'Pošalji pozivnicu'}
                   </Button>
                   <p className="muted text-xs">
                     Posle registracije i potvrde ove email adrese, članstvo se povezuje pri prijavi.
-                    Aplikacija ne šalje email pozivnicu.
+                    Pozivnica stiže mejlom; postojeći nalog koristi istu prijavu.
                   </p>
                 </form>
               )}
