@@ -1,0 +1,1575 @@
+[
+  {
+    "name": "Kremasta kajgana",
+    "default_servings": 2,
+    "prep_minutes": 5,
+    "cook_minutes": 6,
+    "tags": ["breakfast", "brzo", "jednostavno"],
+    "notes": "",
+    "steps": [
+      "Umuti jaja sa mlekom i solju. Hleb prepeci po želji.",
+      "Otopi puter u tiganju na slaboj do srednjoj vatri. Sipaj jaja i lagano pomeraj smesu špatulom od ivica ka sredini.",
+      "Kuvaj oko 4–6 minuta, dok jaja budu stegnuta, a i dalje sočna. Skloni sa vatre, dodaj biber i posluži uz hleb."
+    ],
+    "ingredients": [
+      {
+        "name": "Jaja",
+        "qty": 4,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Puter",
+        "qty": 15,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mleko",
+        "qty": 30,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Hleb",
+        "qty": 120,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Omlet sa spanaćem i fetom",
+    "default_servings": 2,
+    "prep_minutes": 7,
+    "cook_minutes": 8,
+    "tags": ["breakfast", "dinner", "brzo", "vegetarijansko"],
+    "notes": "",
+    "steps": [
+      "Operi i ocedi spanać, a fetu izmrvi. Umuti jaja sa biberom; feta već daje slanost.",
+      "Na ulju kratko prodinstaj spanać, dok ne splasne i višak tečnosti ispari.",
+      "Prelij jajima, rasporedi fetu i peci poklopljeno na slaboj vatri dok se jaja potpuno stegnu. Preklopi i podeli na dve porcije."
+    ],
+    "ingredients": [
+      {
+        "name": "Jaja",
+        "qty": 4,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Spanać",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Feta sir",
+        "qty": 80,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Proja sa sirom i jogurtom",
+    "default_servings": 6,
+    "prep_minutes": 15,
+    "cook_minutes": 35,
+    "tags": ["breakfast", "dinner", "domaće", "za više dana"],
+    "notes": "Ako je sir veoma slan, smanji so. Jedna porcija je približno šestina pleha.",
+    "steps": [
+      "Uključi rernu na 200 °C. Pleh približno 20 × 25 cm obloži papirom za pečenje.",
+      "Pomešaj oba brašna, prašak za pecivo i so. Posebno umuti jaja, jogurt, 150 ml vode i ulje.",
+      "Spoji suve i mokre sastojke, pa umešaj izmrvljen sir. Sipaj u pleh i poravnaj.",
+      "Peci 30–35 minuta, do zlatne kore i suve čačkalice. Odmori 10 minuta, pa iseci na šest porcija."
+    ],
+    "ingredients": [
+      {
+        "name": "Kukuruzno brašno",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pšenično brašno",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 2,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Jogurt",
+        "qty": 250,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 60,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Beli sir",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Prašak za pecivo",
+        "qty": 10,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Prženice iz rerne",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 15,
+    "tags": ["breakfast", "brzo", "domaće"],
+    "notes": "",
+    "steps": [
+      "Zagrej rernu na 210 °C. Pleh obloži papirom i tanko premaži uljem.",
+      "Umuti jaja, mleko i so. Kriške hleba kratko umoči sa obe strane i poređaj u jednom sloju.",
+      "Peci 12–15 minuta, uz okretanje na polovini, dok ne porumene i jaja budu pečena. Posluži uz jogurt."
+    ],
+    "ingredients": [
+      {
+        "name": "Hleb",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 2,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Mleko",
+        "qty": 100,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jogurt",
+        "qty": 300,
+        "unit": "ml",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Ovsena kaša sa jabukom i cimetom",
+    "default_servings": 2,
+    "prep_minutes": 5,
+    "cook_minutes": 8,
+    "tags": ["breakfast", "brzo", "vegetarijansko"],
+    "notes": "",
+    "steps": [
+      "Jabuku operi i izrendaj ili iseckaj. Orahe krupno usitni.",
+      "U šerpi sjedini pahuljice, mleko, jabuku i cimet. Kuvaj na tihoj vatri 6–8 minuta uz mešanje.",
+      "Podeli u dve činije, dodaj med i orahe. Ako želiš ređu kašu, dodaj malo tople vode."
+    ],
+    "ingredients": [
+      {
+        "name": "Ovsene pahuljice",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mleko",
+        "qty": 400,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Jabuka",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Orasi",
+        "qty": 30,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Med",
+        "qty": 15,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Cimet",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Avokado tost sa jajetom",
+    "default_servings": 2,
+    "prep_minutes": 8,
+    "cook_minutes": 8,
+    "tags": ["breakfast", "brzo", "fensi"],
+    "notes": "",
+    "steps": [
+      "Hleb prepeci. Avokado izgnječi sa limunovim sokom, polovinom soli i biberom.",
+      "Na tankom sloju ulja ispeci jaja dok belance i žumance budu stegnuti, ili ih skuvaj po želji.",
+      "Premaži tost avokadom, stavi jaje i dodaj ostatak soli. Posluži odmah."
+    ],
+    "ingredients": [
+      {
+        "name": "Hleb",
+        "qty": 160,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Avokado",
+        "qty": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 2,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 5,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Šakšuka sa paprikom",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 20,
+    "tags": ["breakfast", "dinner", "vegetarijansko", "fensi"],
+    "notes": "",
+    "steps": [
+      "Iseckaj crni luk, papriku i beli luk. Zagrej ulje u dubljem tiganju sa poklopcem.",
+      "Dinstaj luk i papriku 6–8 minuta, dodaj beli luk i mlevenu papriku, pa mešaj još pola minuta.",
+      "Sipaj paradajz, so i biber. Krčkaj oko 8 minuta, pa napravi četiri udubljenja i u svako razbij jaje.",
+      "Poklopi i kuvaj na slaboj vatri dok se jaja stegnu, oko 6–8 minuta. Posluži uz hleb."
+    ],
+    "ingredients": [
+      {
+        "name": "Jaja",
+        "qty": 4,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 400,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Paprika",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 15,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Hleb",
+        "qty": 120,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Palačinkice sa bananom i ovsom",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 10,
+    "tags": ["breakfast", "brzo", "slatko"],
+    "notes": "",
+    "steps": [
+      "Usitni pahuljice u blenderu. Dodaj bananu, jaja, mleko i prašak za pecivo, pa izblendaj i ostavi pet minuta.",
+      "Blago naulji tiganj i zagrej na srednjoj vatri. Sipaj male krugove smese.",
+      "Peci oko 2–3 minuta sa svake strane, dok sredina bude pečena. Posluži uz grčki jogurt."
+    ],
+    "ingredients": [
+      {
+        "name": "Banana",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 2,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Ovsene pahuljice",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mleko",
+        "qty": 80,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Prašak za pecivo",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Grčki jogurt",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Piletina sa pirinčem i povrćem",
+    "default_servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 30,
+    "tags": ["lunch", "dinner", "porodično", "za više dana"],
+    "notes": "",
+    "steps": [
+      "Iseckaj luk i šargarepu, a piletinu na kocke. Pirinač isperi.",
+      "Na ulju dinstaj luk i šargarepu pet minuta. Dodaj piletinu i prži oko sedam minuta, pa umešaj pirinač i začine.",
+      "Dodaj 650 ml vode i grašak. Kada provri, poklopi i kuvaj na slaboj vatri 18–20 minuta; po potrebi dolij malo vode.",
+      "Proveri da je pirinač mekan, a piletina potpuno pečena. Ostavi poklopljeno pet minuta, pa rastresi viljuškom."
+    ],
+    "ingredients": [
+      {
+        "name": "Pileći file",
+        "qty": 600,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pirinač",
+        "qty": 280,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Šargarepa",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Grašak",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 5,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Špagete bolonjeze",
+    "default_servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 45,
+    "tags": ["lunch", "dinner", "porodično"],
+    "notes": "",
+    "steps": [
+      "Sitno iseckaj luk, šargarepu i beli luk. Na ulju dinstaj luk i šargarepu 7–8 minuta.",
+      "Dodaj meso i usitnjavaj varjačom dok ne porumeni. Dodaj beli luk, paradajz, biber, origano i deo soli.",
+      "Krčkaj 30–35 minuta na slaboj vatri; dodaj malo vode ako sos postane pregust.",
+      "Skuvaj špagete u vodi sa ostatkom soli prema pakovanju. Pomešaj sa sosom i posluži sa parmezanom."
+    ],
+    "ingredients": [
+      {
+        "name": "Špagete",
+        "qty": 360,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena junetina",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 600,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Šargarepa",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Parmezan",
+        "qty": 40,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 5,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Origano",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Ćufte iz rerne sa paradajz sosom",
+    "default_servings": 4,
+    "prep_minutes": 20,
+    "cook_minutes": 30,
+    "tags": ["lunch", "dinner", "domaće", "porodično"],
+    "notes": "Prilog nije uračunat; po želji dodaj posebno pire, pirinač ili salatu u svoj plan.",
+    "steps": [
+      "Zagrej rernu na 200 °C. Sjedini meso, jaje, prezle, sitno iseckan crni luk, polovinu belog luka, polovinu soli i biber.",
+      "Oblikuj 16 manjih ćufti i poređaj na papir za pečenje. Peci 20–25 minuta, dok budu potpuno pečene.",
+      "Na ulju kratko zagrej preostali beli luk, dodaj paradajz, origano i ostatak soli. Krčkaj 15 minuta.",
+      "Prebaci ćufte u sos i kuvaj još pet minuta. Podeli po četiri ćufte i sos po porciji."
+    ],
+    "ingredients": [
+      {
+        "name": "Mlevena junetina",
+        "qty": 600,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 1,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Prezle",
+        "qty": 50,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 15,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 5,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Origano",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Punjene paprike",
+    "default_servings": 4,
+    "prep_minutes": 25,
+    "cook_minutes": 65,
+    "tags": ["lunch", "dinner", "domaće", "za više dana"],
+    "notes": "",
+    "steps": [
+      "Operi paprike, odstrani peteljke i očisti semenke. Iseckaj luk i isperi pirinač.",
+      "Na ulju dinstaj luk pet minuta. Dodaj meso i mešaj dok promeni boju, pa umešaj pirinač, začine i 100 g paradajza.",
+      "Napuniti paprike do približno tri četvrtine, da pirinač ima prostora. Uspravno ih poređaj u šerpu.",
+      "Dodaj ostatak paradajza i 600 ml vode do približno dve trećine visine paprika. Poklopi i lagano kuvaj oko 60 minuta, dok pirinač i meso budu skuvani."
+    ],
+    "ingredients": [
+      {
+        "name": "Paprika",
+        "qty": 800,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena junetina",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pirinač",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 5,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Čorbasto sočivo sa povrćem",
+    "default_servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 35,
+    "tags": ["lunch", "dinner", "posno", "vegansko", "za više dana"],
+    "notes": "",
+    "steps": [
+      "Sočivo isperi. Luk i beli luk sitno iseckaj, šargarepu i krompir iseci na manje kocke.",
+      "Na ulju dinstaj luk i šargarepu pet minuta, pa dodaj beli luk i mlevenu papriku.",
+      "Dodaj sočivo, krompir, paradajz i 1.200 ml vode. Krčkaj 30–35 minuta, dok sočivo i krompir omekšaju; prema vrsti sočiva prilagodi vreme i 1.200 ml vode.",
+      "Posoli, izgnječi nekoliko kockica krompira radi gustine i posluži toplo."
+    ],
+    "ingredients": [
+      {
+        "name": "Sočivo",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Šargarepa",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Krompir",
+        "qty": 250,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Brzi pasulj sa dimljenom paprikom",
+    "default_servings": 4,
+    "prep_minutes": 10,
+    "cook_minutes": 25,
+    "tags": ["lunch", "dinner", "posno", "vegansko"],
+    "notes": "Količina se odnosi na oceđen, već kuvan pasulj, ne na suvo zrno.",
+    "steps": [
+      "Koristi već skuvan pasulj ili pasulj iz konzerve; ocedi ga i isperi. Iseckaj povrće.",
+      "Na ulju dinstaj luk i šargarepu 8–10 minuta. Dodaj beli luk i dimljenu papriku, pa kratko promešaj.",
+      "Dodaj pasulj, paradajz, 400 ml vode, so i biber. Krčkaj 15 minuta. Izgnječi malo pasulja u šerpi za gušću teksturu."
+    ],
+    "ingredients": [
+      {
+        "name": "Kuvani pasulj",
+        "qty": 800,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Šargarepa",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pasirani paradajz",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 8,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 25,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Dimljena paprika",
+        "qty": 5,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Musaka od tikvica",
+    "default_servings": 4,
+    "prep_minutes": 20,
+    "cook_minutes": 45,
+    "tags": ["lunch", "dinner", "domaće", "porodično"],
+    "notes": "",
+    "steps": [
+      "Zagrej rernu na 200 °C. Tikvice iseci na tanke kolutove, blago posoli delom soli, ostavi deset minuta i ocedi.",
+      "Na ulju dinstaj luk pet minuta. Dodaj meso, biber i mlevenu papriku i prži dok meso promeni boju i tečnost ispari.",
+      "U posudu za pečenje složi polovinu tikvica, meso, pa ostale tikvice. Umuti jaja, jogurt i ostatak soli i prelij.",
+      "Peci 40–45 minuta, dok tikvice omekšaju, preliv se stegne i sredina bude potpuno pečena. Odmori deset minuta pre sečenja."
+    ],
+    "ingredients": [
+      {
+        "name": "Tikvica",
+        "qty": 1000,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena junetina",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Jaja",
+        "qty": 3,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Jogurt",
+        "qty": 250,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Losos sa limunom i hrskavim krompirom",
+    "default_servings": 2,
+    "prep_minutes": 15,
+    "cook_minutes": 40,
+    "tags": ["lunch", "dinner", "fensi", "riba"],
+    "notes": "",
+    "steps": [
+      "Zagrej rernu na 210 °C. Krompir iseci na manje kocke, pomešaj sa polovinom ulja i soli i peci na plehu 25 minuta.",
+      "Losos premaži ostatkom ulja, limunovim sokom, seckanim belim lukom, solju i biberom.",
+      "Uz krompir dodaj losos i brokoli u manjim cvetovima. Peci još 12–15 minuta, dok se riba lako razdvaja i sredina bude pečena.",
+      "Podeli na dve porcije i posluži odmah. Vreme pečenja ribe prilagodi debljini fileta."
+    ],
+    "ingredients": [
+      {
+        "name": "File lososa",
+        "qty": 320,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Krompir",
+        "qty": 500,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Brokoli",
+        "qty": 250,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 25,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Kremasti rižoto sa pečurkama",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 30,
+    "tags": ["lunch", "dinner", "fensi"],
+    "notes": "Bujon i parmezan mogu biti slani; so prilagodi tek na kraju.",
+    "steps": [
+      "Bujon drži vruć u posebnoj šerpi. Iseckaj luk i beli luk, a pečurke na listiće.",
+      "Pečurke proprži na ulju da porumene, pa izdvoji. U istoj šerpi na polovini putera omekšaj luk, dodaj beli luk i pirinač i mešaj jedan minut.",
+      "Dodaj vruć bujon kutlaču po kutlaču uz često mešanje, sledeću tek kad se prethodna skoro upije. Kuvaj oko 18–22 minuta, dok pirinač bude kuvan, ali čvrst.",
+      "Vrati pečurke, umešaj ostatak putera i parmezan, pa biber i so po ukusu. Odmori poklopljeno dva minuta i posluži kremasto."
+    ],
+    "ingredients": [
+      {
+        "name": "Arborio pirinač",
+        "qty": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Šampinjoni",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 80,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Povrtni bujon",
+        "qty": 700,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Puter",
+        "qty": 25,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Parmezan",
+        "qty": 40,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Njoke sa spanaćem i gorgonzolom",
+    "default_servings": 2,
+    "prep_minutes": 5,
+    "cook_minutes": 15,
+    "tags": ["lunch", "dinner", "brzo", "fensi"],
+    "notes": "",
+    "steps": [
+      "Stavi vodu za njoke da provri. Spanać operi, beli luk iseckaj, a gorgonzolu izmrvi.",
+      "Na ulju kratko zagrej beli luk, dodaj spanać i dinstaj dok splasne. Dodaj pavlaku i gorgonzolu i lagano zagrevaj dok se sir otopi.",
+      "Njoke skuvaj prema pakovanju, ocedi i ubaci u sos. Dodaj biber i nekoliko kašika vode od kuvanja ako je sos gust. Posluži odmah."
+    ],
+    "ingredients": [
+      {
+        "name": "Njoke",
+        "qty": 400,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Spanać",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Gorgonzola",
+        "qty": 80,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pavlaka za kuvanje",
+        "qty": 150,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 4,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Pasta sa škampima i čeri paradajzom",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 15,
+    "tags": ["lunch", "dinner", "brzo", "fensi"],
+    "notes": "Recept je za sirove očišćene škampe; već kuvane samo kratko zagrej na kraju.",
+    "steps": [
+      "Ako koristiš zamrznute škampe, prethodno ih odmrzni u frižideru i prosuši. Prepolovi paradajz i iseckaj beli luk i peršun.",
+      "Skuvaj špagete prema pakovanju, sačuvaj malo vode od kuvanja.",
+      "Na ulju kratko proprži beli luk. Dodaj paradajz i dinstaj pet minuta, pa dodaj sirove očišćene škampe i prži još 3–5 minuta, dok postanu neprozirni i potpuno kuvani.",
+      "Umešaj pastu, limunov sok, peršun, so i biber. Dodaj malo vode od testenine da povežeš sos."
+    ],
+    "ingredients": [
+      {
+        "name": "Špagete",
+        "qty": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Očišćeni škampi",
+        "qty": 250,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Čeri paradajz",
+        "qty": 250,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 8,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 15,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Peršun",
+        "qty": 10,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Pileća salata sa pestom",
+    "default_servings": 2,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["lunch", "dinner", "brzo", "fensi"],
+    "notes": "",
+    "steps": [
+      "Piletinu posoli i pobiberi. Ispeci na ulju oko 5–7 minuta po strani, zavisno od debljine, dok bude potpuno pečena. Ostavi pet minuta i iseci.",
+      "Operi i ocedi salatu. Paradajz prepolovi, a krastavac iseci.",
+      "Pomešaj pesto, jogurt i limunov sok. Složi povrće i piletinu u činije i dodaj preliv pred serviranje."
+    ],
+    "ingredients": [
+      {
+        "name": "Pileći file",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Zelena salata",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Čeri paradajz",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Krastavac",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Pesto",
+        "qty": 40,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Grčki jogurt",
+        "qty": 80,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Mediteranska činija sa leblebijama",
+    "default_servings": 2,
+    "prep_minutes": 15,
+    "cook_minutes": 20,
+    "tags": ["lunch", "dinner", "posno", "vegansko"],
+    "notes": "Leblebije su merene kuvane i oceđene. Kuskus je meren suv.",
+    "steps": [
+      "Rernu zagrej na 210 °C. Oceđene kuvane leblebije pomešaj sa polovinom ulja, paprikom i delom soli. Peci 18–20 minuta.",
+      "Kuskus prelij 150 ml vrele vode, poklopi i ostavi prema pakovanju, oko pet minuta; odnos vode prilagodi uputstvu proizvođača. Rastresi viljuškom.",
+      "Iseckaj krastavac, paradajz i peršun. Pomešaj ostatak ulja, limunov sok i so.",
+      "Podeli kuskus, leblebije i povrće u dve činije i prelij dresingom."
+    ],
+    "ingredients": [
+      {
+        "name": "Kuvane leblebije",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Kuskus",
+        "qty": 120,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Krastavac",
+        "qty": 150,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Čeri paradajz",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Peršun",
+        "qty": 10,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Tortilje sa piletinom i povrćem",
+    "default_servings": 2,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["lunch", "dinner", "brzo"],
+    "notes": "",
+    "steps": [
+      "Piletinu, papriku i luk iseci na tanke trake. Piletinu začini solju, biberom i mlevenom paprikom.",
+      "Na ulju peci piletinu oko osam minuta, pa dodaj papriku i luk. Prži još 5–7 minuta, dok piletina bude potpuno pečena, a povrće omekša.",
+      "Pomešaj jogurt i limunov sok. Tortilje kratko zagrej na suvom tiganju.",
+      "Rasporedi salatu, meso i povrće, dodaj jogurt sos i uvij. Jedna porcija su dve manje tortilje."
+    ],
+    "ingredients": [
+      {
+        "name": "Tortilja",
+        "qty": 4,
+        "unit": "kom",
+        "optional": false
+      },
+      {
+        "name": "Pileći file",
+        "qty": 300,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Paprika",
+        "qty": 200,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Crni luk",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Grčki jogurt",
+        "qty": 100,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Zelena salata",
+        "qty": 60,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Suncokretovo ulje",
+        "qty": 15,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Limunov sok",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Mlevena paprika",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 3,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Kapreze salata sa hrskavim tostom",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 5,
+    "tags": ["dinner", "brzo", "fensi"],
+    "notes": "",
+    "steps": [
+      "Paradajz operi i iseci na kolutove. Mocarelu ocedi i iseci.",
+      "Hleb prepeci u tosteru ili na suvom tiganju.",
+      "Složi paradajz i mocarelu, dodaj bosiljak, maslinovo ulje i balzamiko. Začini solju i biberom i posluži uz tost."
+    ],
+    "ingredients": [
+      {
+        "name": "Paradajz",
+        "qty": 400,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Mocarela",
+        "qty": 250,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Bosiljak",
+        "qty": 10,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Balzamiko sirće",
+        "qty": 10,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Hleb",
+        "qty": 160,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "So",
+        "qty": 2,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Pasta sa zapečenom fetom i paradajzom",
+    "default_servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 30,
+    "tags": ["lunch", "dinner", "fensi", "jednostavno"],
+    "notes": "",
+    "steps": [
+      "Zagrej rernu na 200 °C. U manju posudu stavi fetu u sredinu, okolo paradajz i oljušten beli luk. Prelij uljem i pobiberi.",
+      "Peci 25–30 minuta, dok paradajz omekša i feta porumeni. Za to vreme skuvaj testeninu prema pakovanju i sačuvaj malo vode.",
+      "Viljuškom izgnječi fetu, paradajz i beli luk u sos. Umešaj testeninu i bosiljak, pa po potrebi dodaj vodu od kuvanja."
+    ],
+    "ingredients": [
+      {
+        "name": "Testenina",
+        "qty": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Feta sir",
+        "qty": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Čeri paradajz",
+        "qty": 400,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Beli luk",
+        "qty": 6,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Maslinovo ulje",
+        "qty": 20,
+        "unit": "ml",
+        "optional": false
+      },
+      {
+        "name": "Bosiljak",
+        "qty": 10,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "name": "Biber",
+        "qty": 1,
+        "unit": "g",
+        "optional": false
+      }
+    ]
+  }
+]
