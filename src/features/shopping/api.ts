@@ -125,11 +125,14 @@ export async function clearPlanItemsFromList(params: {
   if (error) throw error;
 }
 
-export async function deleteShoppingItem(householdId: string, id: string) {
+export async function deleteShoppingItem(householdId: string, id: string, checked: boolean) {
   const { error } = await supabase
     .from('shopping_list_items')
     .delete()
     .eq('household_id', householdId)
-    .eq('id', id);
+    .eq('id', id)
+    .eq('checked', checked)
+    .select('id')
+    .single();
   if (error) throw error;
 }

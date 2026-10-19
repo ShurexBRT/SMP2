@@ -44,6 +44,7 @@ export function ShoppingPage() {
   const [purchaseQty, setPurchaseQty] = useState('');
   const [purchaseUnit, setPurchaseUnit] = useState('kom');
   const [purchaseError, setPurchaseError] = useState<unknown>(null);
+  const [historyItem, setHistoryItem] = useState<Row<'shopping_list_items'> | null>(null);
   const listQ = useQuery({
     queryKey: ['shoppingList', householdId, weekStart],
     queryFn: () => getShoppingList({ householdId: householdId!, weekStart }),
@@ -84,7 +85,9 @@ export function ShoppingPage() {
     } else toggle.mutate({ householdId: householdId!, id: item.id, checked: true });
   };
   const remove = useMutation({
-    mutationFn: (id: string) => deleteShoppingItem(householdId!, id),
+    mutationFn: ({ id, checked }: { id: string; checked: boolean }) =>
+      deleteShoppingItem(householdId!, id, checked),
+    onSuccess: () => setHistoryItem(null),
     onSettled: invalidate,
   });
   const add = useMutation({
@@ -253,7 +256,7 @@ export function ShoppingPage() {
                               disabled={busy}
                               onClick={() => {
                                 if (confirm(`Obrisati „${item.label}“ sa liste?`))
-                                  remove.mutate(item.id);
+                                  remove.mutate({ id: item.id, checked: false });
                               }}
                             >
                               <Trash2 size={15} />
@@ -273,6 +276,10 @@ export function ShoppingPage() {
                         <summary className="cursor-pointer font-medium">
                           Kupljeno <span className="badge ml-2">{purchased.length}</span>
                         </summary>
+                        <p className="muted text-xs mt-3">
+                          Istorija kupovine ostaje i kada obrišeš zalihe ili obroke iz plana.
+                          Brisanje stavke iz istorije ne menja količine u frižideru.
+                        </p>
                         <div className="shopping-list mt-4">
                           {purchased.map((item) => (
                             <div key={item.id} className="list-row purchased">
@@ -294,8 +301,22 @@ export function ShoppingPage() {
                                 <p>
                                   {formatQty(item.qty)} {item.unit}
                                 </p>
-                                {item.inventory_transferred_at && <small>Dodato u zalihe</small>}
+                                {item.inventory_transferred_at && (
+                                  <small>Preneto u zalihe pri kupovini</small>
+                                )}
                               </div>
+                              <button
+                                className="icon-button"
+                                aria-label={`Ukloni iz istorije: ${item.label}`}
+                                title="Ukloni iz istorije kupovine"
+                                disabled={busy}
+                                onClick={() => {
+                                  remove.reset();
+                                  setHistoryItem(item);
+                                }}
+                              >
+                                <Trash2 size={15} />
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -350,6 +371,36 @@ export function ShoppingPage() {
           )}
         </aside>
       </div>
+      {historyItem && (
+        <Dialog
+          title="Ukloni iz istorije kupovine"
+          onClose={() => {
+            if (!remove.isPending) setHistoryItem(null);
+          }}
+        >
+          <p className="muted">
+            Ukloniti „{historyItem.label}“ iz kupljenih stavki? Ova radnja ne menja frižider i
+            zalihe. Ako namirnica i dalje treba za planirane obroke, ponovo će se pojaviti kada
+            osvežiš listu iz plana.
+          </p>
+          <ErrorNotice error={remove.error} />
+          <div className="dialog-footer">
+            <Button
+              variant="secondary"
+              disabled={remove.isPending}
+              onClick={() => setHistoryItem(null)}
+            >
+              Otkaži
+            </Button>
+            <Button
+              disabled={remove.isPending}
+              onClick={() => remove.mutate({ id: historyItem.id, checked: true })}
+            >
+              {remove.isPending ? 'Uklanjam…' : 'Ukloni iz istorije'}
+            </Button>
+          </div>
+        </Dialog>
+      )}
       {confirmRefresh && (
         <Dialog
           title="Uskladi kupovinu sa planom"
