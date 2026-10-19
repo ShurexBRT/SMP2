@@ -252,6 +252,7 @@ export interface Database {
           unit: string | null;
           category: string;
           checked: boolean;
+          inventory_transferred_at: string | null;
           source: ShoppingSource;
           created_at: string;
         },

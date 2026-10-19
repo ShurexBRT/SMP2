@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { UsersRound, Plus, Mail, LogOut, Sun, Moon, UserRound } from 'lucide-react';
+import { UsersRound, Plus, Mail, LogOut, Sun, Moon, UserRound, Share2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useHousehold } from '@/app/HouseholdProvider';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { ErrorNotice, Loading } from '@/components/ui/Feedback';
 import { getTheme, setTheme } from '@/lib/theme';
 import { PwaInstallCard } from '@/components/ui/PwaInstallCard';
+import { invitationUrl } from '@/features/household/invitation';
 
 export function AccountPage() {
   const { householdId, memberRole, memberEmail, refetch } = useHousehold();
@@ -95,6 +96,23 @@ export function AccountPage() {
       setError(err);
     } finally {
       setBusy(false);
+    }
+  }
+  async function shareInvitation(email: string) {
+    setError(null);
+    setMessage('');
+    const url = invitationUrl(window.location.href);
+    const text = `Pridruži se našem domaćinstvu u Smart Meal Planner aplikaciji. Registruj se adresom ${email} i potvrdi email. Ako već imaš nalog, prijavi se tom adresom. Pozivnica je već upisana i članstvo će se povezati pri prijavi.\n${url}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Poziv u domaćinstvo', text });
+        setMessage('Poziv je predat izabranoj aplikaciji za deljenje.');
+      } else {
+        await navigator.clipboard.writeText(text);
+        setMessage('Tekst poziva i link su kopirani. Prosledi ih osobi koju pozivaš.');
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) setError(err);
     }
   }
   return (
@@ -211,7 +229,19 @@ export function AccountPage() {
                     <p className="break-all">{member.email}</p>
                     <small className="muted">{member.role === 'owner' ? 'Vlasnik' : 'Član'}</small>
                   </div>
-                  <span className="badge">{member.status === 'active' ? 'Aktivan' : 'Pozvan'}</span>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <span className="badge">
+                      {member.status === 'active' ? 'Aktivan' : 'Pozvan'}
+                    </span>
+                    {memberRole === 'owner' && member.status === 'invited' && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => void shareInvitation(member.email)}
+                      >
+                        <Share2 size={15} /> Podeli poziv
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
               {memberRole === 'owner' && (
@@ -235,7 +265,8 @@ export function AccountPage() {
                   </Button>
                   <p className="muted text-xs">
                     Posle registracije i potvrde ove email adrese, članstvo se povezuje pri prijavi.
-                    Aplikacija ne šalje email pozivnicu.
+                    Email slanje trenutno nije povezano. Upisanu pozivnicu možeš da podeliš dugmetom
+                    „Podeli poziv“.
                   </p>
                 </form>
               )}

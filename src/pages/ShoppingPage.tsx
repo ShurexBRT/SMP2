@@ -14,6 +14,7 @@ import {
 import { useRequireHousehold } from '@/features/household/guard';
 import { addDaysISO, weekLabel, validWeek } from '@/lib/utils';
 import { formatQty, parseQuantity } from '@/lib/data';
+import type { Row } from '@/lib/data';
 import {
   getShoppingList,
   getOrCreateShoppingList,
@@ -39,6 +40,10 @@ export function ShoppingPage() {
   const [unit, setUnit] = useState('kom');
   const [confirmRefresh, setConfirmRefresh] = useState(false);
   const [purchasedInInventoryIds, setPurchasedInInventoryIds] = useState<string[]>([]);
+  const [purchaseItem, setPurchaseItem] = useState<Row<'shopping_list_items'> | null>(null);
+  const [purchaseQty, setPurchaseQty] = useState('');
+  const [purchaseUnit, setPurchaseUnit] = useState('kom');
+  const [purchaseError, setPurchaseError] = useState<unknown>(null);
   const listQ = useQuery({
     queryKey: ['shoppingList', householdId, weekStart],
     queryFn: () => getShoppingList({ householdId: householdId!, weekStart }),
@@ -52,6 +57,8 @@ export function ShoppingPage() {
   const invalidate = async () => {
     await qc.invalidateQueries({ queryKey: ['shoppingList', householdId, weekStart] });
     await qc.invalidateQueries({ queryKey: ['shoppingItems', householdId, weekStart] });
+    await qc.invalidateQueries({ queryKey: ['inventory', householdId] });
+    await qc.invalidateQueries({ queryKey: ['ingredients', householdId] });
   };
   const gen = useMutation({
     mutationFn: () =>
@@ -59,7 +66,23 @@ export function ShoppingPage() {
     onSuccess: () => setConfirmRefresh(false),
     onSettled: invalidate,
   });
-  const toggle = useMutation({ mutationFn: toggleShoppingItem, onSettled: invalidate });
+  const toggle = useMutation({
+    mutationFn: toggleShoppingItem,
+    onSuccess: () => {
+      setPurchaseItem(null);
+      setPurchaseError(null);
+    },
+    onSettled: invalidate,
+  });
+  const purchase = (item: Row<'shopping_list_items'>) => {
+    if (item.qty == null || item.qty <= 0 || !item.unit?.trim()) {
+      setPurchaseItem(item);
+      setPurchaseQty(item.qty ? String(item.qty) : '');
+      setPurchaseUnit(item.unit || 'kom');
+      setPurchaseError(null);
+      toggle.reset();
+    } else toggle.mutate({ householdId: householdId!, id: item.id, checked: true });
+  };
   const remove = useMutation({
     mutationFn: (id: string) => deleteShoppingItem(householdId!, id),
     onSettled: invalidate,
@@ -212,13 +235,7 @@ export function ShoppingPage() {
                             aria-label={`Označi kao kupljeno: ${item.label}`}
                             checked={false}
                             disabled={busy}
-                            onChange={() =>
-                              toggle.mutate({
-                                householdId: householdId!,
-                                id: item.id,
-                                checked: true,
-                              })
-                            }
+                            onChange={() => purchase(item)}
                           />
                           <div className="grow">
                             <h3>{item.label}</h3>
@@ -277,6 +294,7 @@ export function ShoppingPage() {
                                 <p>
                                   {formatQty(item.qty)} {item.unit}
                                 </p>
+                                {item.inventory_transferred_at && <small>Dodato u zalihe</small>}
                               </div>
                             </div>
                           ))}
@@ -324,7 +342,10 @@ export function ShoppingPage() {
                 />
               </div>
               <p className="muted text-xs mt-3">Preostalo: {needed.length} stavki</p>
-              <p className="muted text-xs mt-2">Označavanje kupovine ne menja zalihe automatski.</p>
+              <p className="muted text-xs mt-2">
+                Kupljeno se dodaje u frižider i zalihe. Vraćanje na listu poništava taj unos dok
+                količina nije potrošena.
+              </p>
             </div>
           )}
         </aside>
@@ -340,14 +361,14 @@ export function ShoppingPage() {
             Lista za {weekLabel(weekStart)} biće ponovo izračunata. Ručne i kupljene stavke ostaju.
             Neobavezni sastojci se ne dodaju; rok zaliha se proverava prema datumu obroka.
           </p>
-          {purchased.some((x) => x.source === 'plan') && (
+          {purchased.some((x) => x.source === 'plan' && !x.inventory_transferred_at) && (
             <div className="summary-box mt-4">
               <p className="text-sm mb-3">
                 Ako ste nešto kupljeno već uneli u frižider, označite ga ovde da ne računamo istu
                 količinu dvaput.
               </p>
               {purchased
-                .filter((x) => x.source === 'plan')
+                .filter((x) => x.source === 'plan' && !x.inventory_transferred_at)
                 .map((item) => (
                   <label className="flex items-center gap-2 py-2" key={item.id}>
                     <input
@@ -378,6 +399,73 @@ export function ShoppingPage() {
               {gen.isPending ? 'Osvežavam…' : 'Osveži listu'}
             </Button>
           </div>
+        </Dialog>
+      )}
+      {purchaseItem && (
+        <Dialog
+          title={`Kupljeno: ${purchaseItem.label}`}
+          onClose={() => {
+            if (!toggle.isPending) setPurchaseItem(null);
+          }}
+        >
+          <form
+            className="form-stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setPurchaseError(null);
+              try {
+                const amount = parseQuantity(purchaseQty, 'Kupljena količina', false);
+                toggle.mutate({
+                  householdId: householdId!,
+                  id: purchaseItem.id,
+                  checked: true,
+                  qty: amount,
+                  unit: purchaseUnit,
+                });
+              } catch (error) {
+                setPurchaseError(error);
+              }
+            }}
+          >
+            <p className="muted">Unesi koliko je kupljeno. Ta količina će biti dodata u zalihe.</p>
+            <label>
+              Količina
+              <Input
+                required
+                inputMode="decimal"
+                value={purchaseQty}
+                onChange={(e) => setPurchaseQty(e.target.value)}
+                disabled={toggle.isPending}
+              />
+            </label>
+            <label>
+              Jedinica
+              <select
+                className="field"
+                value={purchaseUnit}
+                onChange={(e) => setPurchaseUnit(e.target.value)}
+                disabled={toggle.isPending}
+              >
+                {[...new Set(['kom', 'g', 'kg', 'ml', 'l', purchaseUnit])].map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
+              </select>
+            </label>
+            <ErrorNotice error={purchaseError || toggle.error} />
+            <div className="dialog-footer">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={toggle.isPending}
+                onClick={() => setPurchaseItem(null)}
+              >
+                Otkaži
+              </Button>
+              <Button type="submit" disabled={toggle.isPending}>
+                {toggle.isPending ? 'Čuvam…' : 'Kupljeno — dodaj u zalihe'}
+              </Button>
+            </div>
+          </form>
         </Dialog>
       )}
     </>

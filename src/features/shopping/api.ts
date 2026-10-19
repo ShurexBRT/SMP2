@@ -69,14 +69,23 @@ export async function toggleShoppingItem(params: {
   householdId: string;
   id: string;
   checked: boolean;
+  qty?: number;
+  unit?: string;
 }): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('shopping_list_items')
-    .update({ checked: params.checked })
+    .update({
+      checked: params.checked,
+      ...(params.qty != null ? { qty: params.qty } : {}),
+      ...(params.unit ? { unit: params.unit.trim() } : {}),
+    })
     .eq('household_id', params.householdId)
-    .eq('id', params.id);
+    .eq('id', params.id)
+    .select('id')
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error('Stavka nije sačuvana. Osveži listu i pokušaj ponovo.');
 }
 
 export async function addManualShoppingItem(params: {

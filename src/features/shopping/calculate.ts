@@ -16,6 +16,7 @@ export type ExistingItem = {
   checked: boolean;
   source: string;
   ingredient_id: string | null;
+  inventory_transferred_at?: string | null;
 };
 
 // A refreshed plan replaces its own outstanding demand; manual and purchased rows are retained.
@@ -61,7 +62,12 @@ export function reconcileShopping(
     });
   }
   for (const item of existing) {
-    if (!item.checked || item.source !== 'plan' || purchasedInInventoryIds.includes(item.id))
+    if (
+      !item.checked ||
+      item.source !== 'plan' ||
+      item.inventory_transferred_at ||
+      purchasedInInventoryIds.includes(item.id)
+    )
       continue;
     const key = ingredientKey(item.label, item.unit ?? '');
     const needed = totals.get(key);
