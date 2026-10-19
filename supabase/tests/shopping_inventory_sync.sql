@@ -74,8 +74,32 @@ begin
   end;
   select count(*) into n from public.shopping_list_items where household_id=h;
   assert n=2,'failed operations left no rows';
+  -- Removing history is independent of undo, and must preserve existing stock.
+  delete from public.shopping_list_items where household_id=h and id=m and checked=true;
+  assert (select count(*)=0 from public.shopping_list_items where id=m),'manual purchase history removed';
+  assert (select v.qty=250 from public.inventory_items v join public.ingredients f on f.id=v.ingredient_id where v.household_id=h and f.name='QA Kafa'),'history deletion preserves stock';
+  -- Expected checked state protects an item that another client has unchecked.
+  delete from public.shopping_list_items where household_id=h and id=s and checked=true;
+  assert (select count(*)=1 from public.shopping_list_items where id=s),'stale checked delete preserves unchecked item';
+  update public.shopping_list_items set unit='g',source='plan' where id=s;
+  update public.inventory_items set unit='g' where household_id=h and ingredient_id=i;
+  update public.shopping_list_items set checked=true where id=s;
+  delete from public.inventory_items where household_id=h and ingredient_id=i;
+  begin
+    update public.shopping_list_items set checked=false where id=s;
+    raise exception 'FAIL missing stock undo';
+  exception when raise_exception then
+    if sqlerrm='FAIL missing stock undo' then raise; end if;
+  end;
+  assert (select checked from public.shopping_list_items where id=s),'missing stock undo remains atomic';
+  delete from public.shopping_list_items where household_id=h and id=s and checked=true;
+  assert (select count(*)=0 from public.shopping_list_items where id=s),'plan history removable after stock deletion';
+  assert (select count(*)=0 from public.inventory_items where household_id=h and ingredient_id=i),'history deletion never recreates stock';
 end $$;
 reset role;
 set constraints all immediate;
-select 'PASS: checked INSERT, conversion, retry, marker protection, undo, consumed undo, incompatible units, manual food, missing quantity, RLS isolation, deferred FKs' as result;
+do $$ begin
+  assert (select count(*)=0 from private.shopping_inventory_receipts where household_id=current_setting('smp.test_hh')::uuid),'history receipt cascade';
+end $$;
+select 'PASS: purchase sync, RLS isolation, safe undo, history deletion with and without stock, stale checked guard, receipt cascade, deferred FKs' as result;
 rollback;
