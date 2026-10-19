@@ -74,7 +74,7 @@ export function AccountPage() {
       });
       if (error) throw error;
       setMessage(
-        'Pozivnica je upisana. Osoba treba da se prijavi ili registruje ovom email adresom. Aplikacija ne šalje email pozivnicu.'
+        'Pozivnica je sačuvana za ovu email adresu. Podeli poziv sa novim članom. Članstvo će se povezati kada se prijavi potvrđenom email adresom.'
       );
       setInviteEmail('');
       await info.refetch();
@@ -265,8 +265,7 @@ export function AccountPage() {
                   </Button>
                   <p className="muted text-xs">
                     Posle registracije i potvrde ove email adrese, članstvo se povezuje pri prijavi.
-                    Email slanje trenutno nije povezano. Upisanu pozivnicu možeš da podeliš dugmetom
-                    „Podeli poziv“.
+                    Sačuvanu pozivnicu možeš da proslediš dugmetom „Podeli poziv“.
                   </p>
                 </form>
               )}
