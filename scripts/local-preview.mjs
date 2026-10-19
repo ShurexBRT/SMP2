@@ -321,7 +321,10 @@ const api = http.createServer(async (req, res) => {
 api.listen(54399, '127.0.0.1');
 process.env.VITE_SUPABASE_URL = 'http://localhost:54399';
 process.env.VITE_SUPABASE_ANON_KEY = 'local-preview-only';
-const vite = await createServer({ server: { host: '127.0.0.1', port: 5174, strictPort: true } });
+const vite = await createServer({
+  cacheDir: 'node_modules/.vite-local-preview',
+  server: { host: '127.0.0.1', port: 5174, strictPort: true },
+});
 await vite.listen();
 console.log('LOCAL FIXTURES ONLY — http://localhost:5174 — login pregled@primer.rs / Pregled123!');
 const close = async () => {

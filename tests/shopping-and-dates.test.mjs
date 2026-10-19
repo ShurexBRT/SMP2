@@ -8,7 +8,9 @@ const { reconcileShopping } = await server.ssrLoadModule('/src/features/shopping
 const { addDaysISO, startOfWeekISO } = await server.ssrLoadModule('/src/lib/utils.ts');
 const { convertQuantity } = await server.ssrLoadModule('/src/lib/quantities.ts');
 const { RecipeSchema } = await server.ssrLoadModule('/src/features/recipes/schema.ts');
-const { mayClaimInvitation } = await server.ssrLoadModule('/src/features/household/invitation.ts');
+const { mayClaimInvitation, invitationUrl } = await server.ssrLoadModule(
+  '/src/features/household/invitation.ts'
+);
 const { allRows } = await server.ssrLoadModule('/src/lib/paginate.ts');
 const today = '2026-10-16';
 const demand = (qty, unit = 'g') => [{ label: 'Pirinač', ingredientId: 'rice', qty, unit }];
@@ -21,6 +23,28 @@ const row = (overrides = {}) => ({
   checked: false,
   source: 'plan',
   ...overrides,
+});
+
+test('shared invitation keeps the GitHub Pages subpath and drops unrelated query data', () => {
+  assert.equal(
+    invitationUrl('https://shurexbrt.github.io/SMP2/#/account'),
+    'https://shurexbrt.github.io/SMP2/#/signup'
+  );
+  assert.equal(
+    invitationUrl('http://localhost:5174/?code=private#/account'),
+    'http://localhost:5174/#/signup'
+  );
+});
+
+test('automatic stock transfers are counted only once when refreshing the plan', () => {
+  const result = reconcileShopping(
+    demand(1000),
+    [{ name: 'Pirinač', qty: 500, unit: 'g' }],
+    [row({ checked: true, inventory_transferred_at: '2026-10-19T07:00:00Z' })],
+    today
+  );
+  assert.equal(result.inserts[0].qty, 500);
+  assert.deepEqual(result.deletes, []);
 });
 
 test('calendar week navigation preserves dates across DST and year boundaries', () => {

@@ -1,3 +1,10 @@
+export function invitationUrl(pageUrl: string) {
+  const url = new URL(pageUrl);
+  url.search = '';
+  url.hash = '/signup';
+  return url.href;
+}
+
 export function mayClaimInvitation(
   invite: { email: string; status: string; user_id: string | null },
   user: { id: string; email?: string; email_confirmed_at?: string }
