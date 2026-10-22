@@ -37,6 +37,12 @@ import { ErrorNotice, HouseholdGate, Loading } from '@/components/ui/Feedback';
 
 type Slot = { date: string; mealType: Row<'meal_plan_items'>['meal_type'] };
 export function PlanPage() {
+  const { householdId } = useRequireHousehold();
+  const [params] = useSearchParams();
+  return <WeeklyPlan key={`${householdId}-${validWeek(params.get('week'))}`} />;
+}
+
+function WeeklyPlan() {
   const qc = useQueryClient();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -45,6 +51,7 @@ export function PlanPage() {
   const rawWeek = params.get('week');
   const weekStart = validWeek(rawWeek);
   const [slot, setSlot] = useState<Slot | null>(null);
+  const [removal, setRemoval] = useState<Slot | null>(null);
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
   const recipesQ = useQuery({
@@ -78,6 +85,7 @@ export function PlanPage() {
       deleteMealPlanItem({ householdId: householdId!, mealPlanId: planQ.data!.id, ...change }),
     onSuccess: async () => {
       setSlot(null);
+      setRemoval(null);
       await qc.invalidateQueries({ queryKey: ['mealPlanItems', householdId, weekStart] });
     },
   });
@@ -99,6 +107,14 @@ export function PlanPage() {
       r.name.toLocaleLowerCase().includes(search.toLocaleLowerCase())
   );
   const loading = recipesQ.isLoading || planQ.isLoading || (!!planQ.data && itemsQ.isLoading);
+  const selectedItem = slot
+    ? items.find((item) => item.date === slot.date && item.meal_type === slot.mealType)
+    : undefined;
+  const requestRemoval = (next: Slot) => {
+    remove.reset();
+    setSlot(null);
+    setRemoval(next);
+  };
   return (
     <>
       <div className="page-heading plan-heading">
@@ -210,7 +226,7 @@ export function PlanPage() {
                               className="icon-button"
                               aria-label={`Ukloni ${meal.label.toLowerCase()} za ${formatDate(date)}`}
                               disabled={busy}
-                              onClick={() => remove.mutate({ date, mealType: meal.key })}
+                              onClick={() => requestRemoval({ date, mealType: meal.key })}
                             >
                               <X size={15} />
                             </button>
@@ -223,6 +239,15 @@ export function PlanPage() {
                           >
                             {recipe?.name ?? 'Recept nije dostupan'}
                           </button>
+                          {recipe && (
+                            <Link
+                              className="text-link text-xs"
+                              to={`/recipes/${recipe.id}?from=plan&week=${weekStart}&servings=${item.servings}`}
+                              aria-label={`Otvori recept: ${recipe.name}, ${item.servings} porcija`}
+                            >
+                              Otvori recept
+                            </Link>
+                          )}
                           <div className="meal-bottom">
                             <span className="muted text-xs">
                               {recipe && totalMinutes(recipe) > 0
@@ -324,6 +349,11 @@ export function PlanPage() {
             />
             Prikaži i recepte za druge obroke
           </label>
+          {selectedItem && (
+            <p className="muted text-sm mb-4">
+              Zamena zadržava broj porcija iz plana: {selectedItem.servings}.
+            </p>
+          )}
           <ErrorNotice error={save.error || remove.error} />
           {selectedRecipes.map((recipe) => (
             <button
@@ -331,7 +361,11 @@ export function PlanPage() {
               key={recipe.id}
               disabled={busy}
               onClick={() =>
-                save.mutate({ ...slot, recipeId: recipe.id, servings: recipe.default_servings })
+                save.mutate({
+                  ...slot,
+                  recipeId: recipe.id,
+                  servings: selectedItem?.servings ?? recipe.default_servings,
+                })
               }
             >
               <div className="grow flex-1">
@@ -339,7 +373,7 @@ export function PlanPage() {
                 <p className="flex items-center gap-2">
                   <Clock3 size={13} />
                   {totalMinutes(recipe) ? `${totalMinutes(recipe)} min · ` : ''}
-                  {recipe.default_servings} porcije
+                  {selectedItem?.servings ?? recipe.default_servings} porcije
                 </p>
               </div>
               <span className="badge">{save.isPending ? 'Čuvam…' : 'Izaberi'}</span>
@@ -356,12 +390,35 @@ export function PlanPage() {
           )}
           {items.some((item) => item.date === slot.date && item.meal_type === slot.mealType) && (
             <div className="dialog-footer">
-              <Button variant="danger" disabled={busy} onClick={() => remove.mutate(slot)}>
+              <Button variant="danger" disabled={busy} onClick={() => requestRemoval(slot)}>
                 <X size={17} />
                 Ukloni obrok iz plana
               </Button>
             </div>
           )}
+        </Dialog>
+      )}
+      {removal && (
+        <Dialog
+          title="Ukloniti obrok iz plana?"
+          onClose={() => {
+            if (!busy) setRemoval(null);
+          }}
+        >
+          <p className="muted">
+            {MEALS.find((meal) => meal.key === removal.mealType)?.label} ·{' '}
+            {formatDate(removal.date, { weekday: 'long', day: 'numeric', month: 'long' })}.
+            Recept i zalihe ostaju sačuvani. Listu za kupovinu možeš potom osvežiti iz plana.
+          </p>
+          <ErrorNotice error={remove.error} />
+          <div className="dialog-footer">
+            <Button variant="secondary" disabled={busy} onClick={() => setRemoval(null)}>
+              Odustani
+            </Button>
+            <Button variant="danger" disabled={busy} onClick={() => remove.mutate(removal)}>
+              {remove.isPending ? 'Uklanjanje…' : 'Ukloni obrok'}
+            </Button>
+          </div>
         </Dialog>
       )}
     </>
