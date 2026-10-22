@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -17,7 +17,7 @@ import { useRequireHousehold } from '@/features/household/guard';
 import { getRecipe, deleteRecipe } from '@/features/recipes/api';
 import { listRecipeIngredients } from '@/features/recipes/ingredientsApi';
 import { getOrCreateMealPlan, upsertMealPlanItem, listMealPlanItems } from '@/features/plan/api';
-import { todayISO, startOfWeekISO } from '@/lib/utils';
+import { todayISO, startOfWeekISO, validWeek } from '@/lib/utils';
 import { formatQty, MEALS } from '@/lib/data';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -27,7 +27,8 @@ import type { MealType } from '@/lib/types';
 
 export function RecipePage() {
   const { id } = useParams();
-  return <RecipeDetail key={id} />;
+  const [params] = useSearchParams();
+  return <RecipeDetail key={`${id}-${params.toString()}`} />;
 }
 
 function RecipeDetail() {
@@ -35,7 +36,16 @@ function RecipeDetail() {
   const { householdId, ready } = useRequireHousehold();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const [portionOverride, setPortionOverride] = useState<number | null>(null);
+  const [params] = useSearchParams();
+  const fromPlan = params.get('from') === 'plan';
+  const returnWeek = validWeek(params.get('week'));
+  const [portionOverride, setPortionOverride] = useState<number | null>(() => {
+    const raw = params.get('servings');
+    const value = Number(raw);
+    return raw && /^\d+$/.test(raw) && Number.isInteger(value) && value >= 1 && value <= 100
+      ? value
+      : null;
+  });
   const [planDialog, setPlanDialog] = useState(false);
   const [date, setDate] = useState(todayISO);
   const [meal, setMeal] = useState<MealType>('lunch');
@@ -66,7 +76,10 @@ function RecipeDetail() {
       const existing = (
         await listMealPlanItems({ householdId: householdId!, mealPlanId: plan.id })
       ).find((x) => x.date === date && x.meal_type === meal);
-      if (existing && !confirm('Za ovaj termin već postoji obrok. Zameniti ga ovim receptom?'))
+      if (
+        existing &&
+        !confirm(`Za ovaj termin već postoji obrok. Zameniti ga ovim receptom za ${servings} porcija?`)
+      )
         return null;
       await upsertMealPlanItem({
         householdId: householdId!,
@@ -95,9 +108,12 @@ function RecipeDetail() {
     <div className="recipe-detail page-stack">
       <div className="page-heading">
         <div>
-          <Link className="text-link text-xs flex items-center gap-2 mb-4" to="/recipes">
+          <Link
+            className="text-link text-xs flex items-center gap-2 mb-4"
+            to={fromPlan ? `/plan?week=${returnWeek}` : '/recipes'}
+          >
             <ArrowLeft size={15} />
-            Recepti
+            {fromPlan ? 'Nazad na nedeljni plan' : 'Recepti'}
           </Link>
           <h1>{r.name}</h1>
           <div className="flex flex-wrap gap-2 mt-3">
@@ -113,6 +129,12 @@ function RecipeDetail() {
           Uredi
         </Link>
       </div>
+      {fromPlan && (
+        <p className="muted text-sm">
+          Sastojci su prikazani za broj porcija iz plana. Promena porcija ovde služi za pregled;
+          broj porcija u planu menjaš na kartici obroka.
+        </p>
+      )}
       <div className="detail-metrics">
         <div className="metric">
           <small>Priprema</small>
